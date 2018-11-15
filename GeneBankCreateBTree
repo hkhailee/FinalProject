@@ -23,7 +23,15 @@ public class GeneBankCreateBTree {
 					throw new Exception(); //invalid cache value given 
 				}
 
-				int degree = Integer.parseInt(args[1]); // takes in degree t
+				// if degree is 0 then find optimal degree and use that
+				if (Integer.parseInt(args[1]) == 0) {
+
+					// ((2t-1)application object size) + ((2t+1)pointer object size) + (BtreeNode
+					// metadata size) <= 4096
+
+				} else {
+					int degree = Integer.parseInt(args[1]); // takes in degree t
+				}
 				File file = new File(args[2]); // takes in file name
 
 				/*
