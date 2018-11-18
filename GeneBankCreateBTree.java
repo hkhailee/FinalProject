@@ -94,33 +94,84 @@ public class GeneBankCreateBTree {
 
 					while (s2.hasNext()) {
 
-						if (foundStart == false) {
-							String s = s2.next();
-							if (s.equals("ORIGIN")) {
-								foundStart = true;
-							}
-						} else {
+						String s = s2.next();
 
-							char seq = s2.next().charAt(0);
+						if (s.equals("ORIGIN")) {
+							foundStart = true;
+							System.out.println(foundStart);
+						}
+						else if (s.equals("//")) {
+							foundStart = false;
+							sequence = "";
+							System.out.println(foundStart);
+						}
+
+						else if (foundStart == true) {
+
+							Scanner sScan = new Scanner(s);
+							char c = sScan.next().charAt(0);
 							bitNum++;
 
-							if (seq == 'a' || seq == 't' || seq == 'c' || seq == 'g') { // only adds valid characters to sequence
-								
-
-								if (sequence.length() < k) { // while less than the given sequence size
-									sequence += seq;		//add it to the sequence
-									if(sequence.length() == k)
-									System.out.println(sequence);
-									
-								}
-								else {
-									sequence= "";	//if the sequence is greater than the limit restart
-									sequence += seq; //add the letter that has yet to be added
-								}
+							if (c == 'n' || c == 'N') {
+								sequence = "";
 
 							}
 
+							else {
+								if (c == 'a' || c == 't' || c == 'c' || c == 'g'|| c == 'A' || c == 'T' || c == 'C' || c == 'G') {
+									if (sequence.length() < k) {
+										sequence += c;
+										if (sequence.length() == k) {
+											System.out.println(bitNum + sequence);
+											sequence = "";
+
+										}
+									}
+
+								}
+							}
 						}
+
+						// soultion doesnt work because you need to ignore everything before an origin
+						// this will get
+						// letter that are a t c g before an origin and count them in the gene sequence
+
+						/*
+						 * if(s.equals("\\")) { foundStart = false; }
+						 * 
+						 * 
+						 * if (foundStart == false) {
+						 * 
+						 * if (s.equals("ORIGIN")) { foundStart = true; } } else {
+						 * 
+						 * Scanner sScan = new Scanner(s); char seq = sScan.next().charAt(0); bitNum++;
+						 * 
+						 * if(seq=='n') { sequence= "";
+						 * 
+						 * }
+						 * 
+						 * 
+						 * 
+						 * 
+						 * else if (seq == 'a' || seq == 't' || seq == 'c' || seq == 'g') { // only adds
+						 * valid characters to sequence
+						 * 
+						 * if (sequence.length() < k) { // while less than the given sequence size
+						 * sequence += seq; //add it to the sequence if(sequence.length() == k) //test
+						 * 
+						 * System.out.println("[" + (bitNum - sequence.length()) + "] :" + sequence); //
+						 * will add to the btree class
+						 * 
+						 * 
+						 * } else { sequence= ""; //if the sequence is greater than the limit restart
+						 * sequence += seq; //add the letter that has yet to be added }
+						 * 
+						 * } else if(seq=='n') { sequence= "";
+						 * 
+						 * }
+						 * 
+						 * }
+						 */
 					}
 
 				}
