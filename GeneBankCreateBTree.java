@@ -85,96 +85,66 @@ public class GeneBankCreateBTree {
 				 * btree class
 				 */
 				boolean foundStart = false;
-				int bitNum = 0;
+				int bitNum = 1;
 				String sequence = "";
 				Scanner scan = new Scanner(new File(args[2]));
+				String s;
 
 				while (scan.hasNextLine()) {
 					Scanner s2 = new Scanner(scan.nextLine());
 
 					while (s2.hasNext()) {
-
-						String s = s2.next();
+						s = s2.next();
 
 						if (s.equals("ORIGIN")) {
 							foundStart = true;
 							System.out.println(foundStart);
-						}
-						else if (s.equals("//")) {
+						} else if (s.equals("//")) {
 							foundStart = false;
+							System.out.println(sequence.length());
+							bitNum = bitNum - sequence.length();
 							sequence = "";
 							System.out.println(foundStart);
 						}
 
 						else if (foundStart == true) {
 
-							Scanner sScan = new Scanner(s);
-							char c = sScan.next().charAt(0);
-							bitNum++;
+							for (int i = 0; i < s.length(); i++) {
 
-							if (c == 'n' || c == 'N') {
-								sequence = "";
+								char c = s.charAt(i);
 
-							}
+								if (c == 'n' || c == 'N') {
+									bitNum = bitNum - sequence.length();
+									sequence = "";
 
-							else {
-								if (c == 'a' || c == 't' || c == 'c' || c == 'g'|| c == 'A' || c == 'T' || c == 'C' || c == 'G') {
-									if (sequence.length() < k) {
-										sequence += c;
-										if (sequence.length() == k) {
-											System.out.println(bitNum + sequence);
-											sequence = "";
+								}
 
+								else {
+									if (c == 'a' || c == 't' || c == 'c' || c == 'g' || c == 'A' || c == 'T' || c == 'C'
+											|| c == 'G') {
+										if (sequence.length() < k) {
+
+											sequence += c;
+											bitNum++;
+
+											if (sequence.length() == k) {
+												System.out.println((bitNum - sequence.length()) + sequence);
+												sequence = "";
+
+											}
 										}
+
 									}
 
 								}
 							}
+
 						}
 
-						// soultion doesnt work because you need to ignore everything before an origin
-						// this will get
-						// letter that are a t c g before an origin and count them in the gene sequence
-
-						/*
-						 * if(s.equals("\\")) { foundStart = false; }
-						 * 
-						 * 
-						 * if (foundStart == false) {
-						 * 
-						 * if (s.equals("ORIGIN")) { foundStart = true; } } else {
-						 * 
-						 * Scanner sScan = new Scanner(s); char seq = sScan.next().charAt(0); bitNum++;
-						 * 
-						 * if(seq=='n') { sequence= "";
-						 * 
-						 * }
-						 * 
-						 * 
-						 * 
-						 * 
-						 * else if (seq == 'a' || seq == 't' || seq == 'c' || seq == 'g') { // only adds
-						 * valid characters to sequence
-						 * 
-						 * if (sequence.length() < k) { // while less than the given sequence size
-						 * sequence += seq; //add it to the sequence if(sequence.length() == k) //test
-						 * 
-						 * System.out.println("[" + (bitNum - sequence.length()) + "] :" + sequence); //
-						 * will add to the btree class
-						 * 
-						 * 
-						 * } else { sequence= ""; //if the sequence is greater than the limit restart
-						 * sequence += seq; //add the letter that has yet to be added }
-						 * 
-						 * } else if(seq=='n') { sequence= "";
-						 * 
-						 * }
-						 * 
-						 * }
-						 */
 					}
 
 				}
+				scan.close();
 				/*
 				 * next step is to assign each of these sequences with bit locations
 				 */
@@ -194,3 +164,4 @@ public class GeneBankCreateBTree {
 	}
 
 }
+
