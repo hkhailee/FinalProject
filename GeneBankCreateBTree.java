@@ -5,10 +5,11 @@ import java.util.Scanner;
 
 public class GeneBankCreateBTree {
 
-	public static int cacheSize;
-	public static int k;
-
 	public static void main(String args[]) {
+		Cache thisCache = null;
+		int cacheSize;
+		int k;
+
 		try {
 
 			// Checks to see if required size is present
@@ -20,8 +21,10 @@ public class GeneBankCreateBTree {
 
 				if (Integer.parseInt(args[0]) == 0 || Integer.parseInt(args[0]) == 1) {
 					if (Integer.parseInt(args[0]) == 1) {
-						// create cache
+
 						cacheSize = Integer.parseInt(args[4]); // cache size should never change
+						thisCache = new Cache(cacheSize); // uses optional value of cache size
+
 					}
 				} else {
 					System.out.println(Integer.parseInt(args[0]));
@@ -58,7 +61,7 @@ public class GeneBankCreateBTree {
 				 * debugging level
 				 */
 
-				if (args.length > 4) {
+				if (args.length > 5) {
 					if (Integer.parseInt(args[4]) == 0 || Integer.parseInt(args[4]) == 1) {
 						if (Integer.parseInt(args[4]) == 0) {
 							// Any diagnostic messages, help and status messages must be be printed on
@@ -83,6 +86,8 @@ public class GeneBankCreateBTree {
 				/*
 				 * scan a given kgb file and then send the corresponding sequence string to the
 				 * btree class
+				 * 
+				 * also will potentially add the value to cache
 				 */
 				boolean foundStart = false;
 				int bitNum = 1;
@@ -129,6 +134,21 @@ public class GeneBankCreateBTree {
 
 											if (sequence.length() == k) {
 												System.out.println((bitNum - sequence.length()) + sequence);
+
+												/*
+												 * if the cache is initalized then it will add the object to the cache
+												 */
+												if (Integer.parseInt(args[0]) == 1) {
+
+													if (thisCache.getObject(sequence) == false) {
+														thisCache.addObject(sequence);
+													} else {
+														thisCache.moveToTop(sequence);
+													}
+												}
+												
+												//pass the object to the btree class
+
 												sequence = "";
 
 											}
@@ -164,4 +184,3 @@ public class GeneBankCreateBTree {
 	}
 
 }
-
