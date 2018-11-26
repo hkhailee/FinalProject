@@ -28,16 +28,16 @@ public class GeneBankSearch {
 				exists0 = true;
 			}
 			if (i == 1) {
-				exists0 = true;
+				exists1 = true;
 			}
 			if (i == 2) {
-				exists0 = true;
+				exists2 = true;
 			}
 			if (i == 3) {
-				exists0 = true;
+				exists3 = true;
 			}
 			if (i == 4) {
-				exists0 = true;
+				exists4 = true;
 			}
 		}
 
