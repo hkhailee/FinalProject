@@ -9,9 +9,10 @@ public class BTree {
 	private BTreeNode currentNode;
 	int cursor; //byte position. always point to the end of the file
 	File file;
-	public BTree(int t, String fileName) {
+	public BTree(int t, String fileName) throws Exception {
 		this.t = t;
-		root = new BTreeNode(true, 0, 2*t);
+		allocateNode();
+		root = new BTreeNode(true, 0, (2*t-1));
 		currentNode = root;
 		cursor = 0;
 		file = new File(fileName);
@@ -23,17 +24,17 @@ public class BTree {
 	    raf.writeInt(cursor);
 	    raf.writeInt(0);
 	    raf.writeInt(0);
-	    cursor += 3;
+	    cursor += 3*4;
 	    //Initialize all pointers to -1
 	    for (int i = 1; i <= (2*t + 1); i++) {
 	    	raf.writeInt(-1);
-	    	cursor++;
+	    	cursor+=4;
 	    }
 	    //Initialize all TreeObject values
 	    for (int i = 1; i <= (2*t - 1); i++) {
-	    	raf.writeInt(-1);
+	    	raf.writeLong(-1);
 	    	raf.writeInt(0);
-	    	cursor += 2;
+	    	cursor += 12;
 	    }
 	    raf.close();  
 	}
