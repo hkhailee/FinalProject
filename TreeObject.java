@@ -8,7 +8,7 @@ public class TreeObject {
 		
 	}
 	
-	public TreeObject(long stream, int position) {
+	public TreeObject(long stream) {
 		this.Stream = stream;
 		Frequency = 0;
 		this.Position = position;
