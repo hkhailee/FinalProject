@@ -68,7 +68,10 @@ public class BTreeNode {
 		}
 		else isLeaf = false;
 	}
-	
+	public boolean getIsLeaf() {
+		boolean val = isLeaf;
+		return val;
+	}
 	public void setChild(int index, BTreeNode n) {
 		this.children.set(index, n);
 	}
