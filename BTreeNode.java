@@ -58,8 +58,9 @@ public class BTreeNode {
 		objects.set(index, object);
 	}
 	
-	public void getObject(int index) {
-		objects.get(index);
+	public TreeObject getObject(int index) {
+		TreeObject object = objects.get(index);
+		return object;
 	}
 	
 	public void setIsLeaf(int x) {
