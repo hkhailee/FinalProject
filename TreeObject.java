@@ -1,27 +1,29 @@
+public class TreeObject {
 
-
-public class TreeObject {	
-	
-	private long stream;
-	private int frequency;
-	/*
-	 * constructor
-	 */
-	public TreeObject(long stream) {
-		this.stream = 0;
-		frequency = 0;
+	private long Stream;
+	private int Frequency;
+	private int Position; //The byte position of the object within the the node in the file. May need to divide into two methods; the other method being getValue(). Make sure the right most object is larger
+//	private int Value;
+	public TreeObject() {
+		
 	}
 	
-	public TreeObject(long stream, int frequency) {
-		this.stream = stream;
-		this.frequency = frequency;
+	public TreeObject(long stream, int position) {
+		this.Stream = stream;
+		Frequency = 0;
+		this.Position = position;
+	}
+	public int getPosition() {
+		int position = Position;
+		return position;
+	}
+	public long getStream() { // Returns the byte position of the object 
+		long strm = Stream;
+		return strm;
 	}
 	
 	public int getFrequency() {
-		return this.frequency;
-	}
-	
-	public long getSequence() {
-		return this.stream;
+		int freq = Frequency;
+		return freq;
 	}
 }
