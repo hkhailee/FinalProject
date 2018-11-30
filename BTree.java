@@ -86,8 +86,8 @@ public class BTree {
 		newRightNode.setNumObjects(t-1);
 		
 		newLeftNode.diskWrite(file);
-		newRightNode.diskWrite(file);					// Add code to write in the nodes, the order may be different than what is here depending upon our storing method
-		parentNode.diskWrite(file);		// This method does not keep track of the amount of objects within a node so it will be the nodes responsibility 
+		newRightNode.diskWrite(file);		
+		parentNode.diskWrite(file);		
 	
 	}
 	
