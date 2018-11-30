@@ -17,7 +17,7 @@ public class TreeObject {
 		int position = Position;
 		return position;
 	}
-	public long getStream() { // Returns the byte position of the object 
+	public long getSequence() { 
 		long strm = Stream;
 		return strm;
 	}
