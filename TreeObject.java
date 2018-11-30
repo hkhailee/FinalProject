@@ -1,17 +1,17 @@
 public class TreeObject {
 
 	private long Stream;
-	private int Frequency;
+	public static int freq;
 	private long Value; 
 	
 	public TreeObject(long stream) {
 		this.Stream = stream;
-		this.Frequency = 0;
+		this.freq = 0;
 		this.Value = stream;
 	}
 	public TreeObject(long stream, int frequency) {
 		this.Stream = stream;
-		this.Frequency = frequency;
+		this.freq = frequency;
 		this.Value = stream;
 	}
 	public long getValue() {
@@ -24,7 +24,15 @@ public class TreeObject {
 	}
 	
 	public int getFrequency() {
-		int freq = Frequency;
+
 		return freq;
 	}
+
+	public String getObject() {
+		
+		//return string value of stream
+		return seq;
+	}
 }
+
+
