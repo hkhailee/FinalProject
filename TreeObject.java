@@ -18,7 +18,7 @@ public class TreeObject {
 		long value = Value;
 		return value;
 	}
-	public long getStream() { 
+	public long getSequence() { 
 		long strm = Stream;
 		return strm;
 	}
