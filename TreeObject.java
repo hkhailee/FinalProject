@@ -2,22 +2,23 @@ public class TreeObject {
 
 	private long Stream;
 	private int Frequency;
-	private int Position; //The byte position of the object within the the node in the file. May need to divide into two methods; the other method being getValue(). Make sure the right most object is larger
-//	private int Value;
-	public TreeObject() {
-		
-	}
+	private long Value; 
 	
 	public TreeObject(long stream) {
 		this.Stream = stream;
-		Frequency = 0;
-		this.Position = position;
+		this.Frequency = 0;
+		this.Value = stream;
 	}
-	public int getPosition() {
-		int position = Position;
-		return position;
+	public TreeObject(long stream, int frequency) {
+		this.Stream = stream;
+		this.Frequency = frequency;
+		this.Value = stream;
 	}
-	public long getSequence() { 
+	public long getValue() {
+		long value = Value;
+		return value;
+	}
+	public long getStream() { 
 		long strm = Stream;
 		return strm;
 	}
