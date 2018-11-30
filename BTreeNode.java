@@ -14,12 +14,17 @@ public class BTreeNode {
 	private int maxObjects;
 	private int maxPtrs;
 	private int nextOpenSpot;
+	private List<BTreeNode> children;
+	private BTreeNode parent;
 	public BTreeNode(boolean isLeaf, int byteOffset, int maxObjects) {
 		this.isLeaf = isLeaf;
 		this.byteOffset = byteOffset;
+		this.
 		nextOpenSpot = 0;
 		objects = new ArrayList<TreeObject>();
 		childPtrs = new ArrayList<Integer>();
+		objects.add(new TreeObject(-1, -1));
+		childPtrs.add(-1);
 		this.maxObjects = maxObjects;
 		this.maxPtrs = maxObjects + 1;
 		parentPtr = 0;
@@ -42,7 +47,11 @@ public class BTreeNode {
 	}
 	
 	public int getNumObjects() {
-		return objects.size();
+		return objects.size()-1;
+	}
+	
+	public int getNumChldPtrs() {
+		return childPtrs.size() - 1;
 	}
 	
 	public void setObject(int index, TreeObject object) {
@@ -58,6 +67,14 @@ public class BTreeNode {
 			isLeaf = true;
 		}
 		else isLeaf = false;
+	}
+	
+	public void setChild(int index, BTreeNode n) {
+		this.children.set(index, n);
+	}
+	
+	public BTreeNode getChild(int index) {
+		return this.children.get(index);
 	}
 	
 	public void diskWrite(File file) throws Exception {
@@ -104,6 +121,7 @@ public class BTreeNode {
 	    
 	    //set child pointers
 	    List<Integer> ptrs = new ArrayList<Integer>();
+	    ptrs.add(-1);
 	    for (int i = 0; i < maxPtrs; i++) {
 	    	int x = raf.readInt();
 	    	if (x != -1) {
@@ -116,7 +134,48 @@ public class BTreeNode {
 	    List<TreeObject> treeObjs = new ArrayList<TreeObject>();
 	    for (int i = 0; i < maxObjects; i++) {
 	    	long x = raf.readLong();
-	    	int y = raf.readInt();	    	
+	    	int y = raf.readInt();
+	    	treeObjs.add(new TreeObject(-1, -1));
+	    	if (x != -1) {
+	    		treeObjs.add(new TreeObject(x, y));
+	    	}
+	    }
+	    newNode.setObjects(treeObjs);
+	    List<BTreeNode> allChildren = new ArrayList<BTreeNode>();
+	    allChildren.add(null);
+	    for (int i = 1; i < newNode.childPtrs.size(); i++) {
+	    	allChildren.add(diskReadChildren(childPtrs.get(i), file));
+	    }
+	    return newNode;
+	}
+	
+	
+	public BTreeNode diskReadChildren(int childIndex, File file) throws Exception {
+		BTreeNode newNode = new BTreeNode(false, childPtrs.get(childIndex), maxObjects);
+		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+	    raf.seek(childPtrs.get(childIndex));
+	    raf.readInt();
+	    newNode.setNumObjects(raf.readInt());
+	    newNode.setIsLeaf(raf.readInt());
+	    newNode.setParentPointer(raf.readInt());
+	    
+	    //set child pointers
+	    List<Integer> ptrs = new ArrayList<Integer>();
+	    ptrs.add(-1);
+	    for (int i = 0; i < maxPtrs; i++) {
+	    	int x = raf.readInt();
+	    	if (x != -1) {
+	    		ptrs.add(x);
+	    	}
+	    }
+	    newNode.setChildPointers(ptrs);
+	    
+	    //set tree objects
+	    List<TreeObject> treeObjs = new ArrayList<TreeObject>();
+	    for (int i = 0; i < maxObjects; i++) {
+	    	long x = raf.readLong();
+	    	int y = raf.readInt();
+	    	treeObjs.add(new TreeObject(-1, -1));
 	    	if (x != -1) {
 	    		treeObjs.add(new TreeObject(x, y));
 	    	}
