@@ -10,7 +10,7 @@ public class GeneBankCreateBTree {
 		int k; // sequence length
 		int degree = 0; // degree of tree
 		long stream = 0;
-		String s= "";
+		String s = "";
 
 		try {
 
@@ -73,11 +73,10 @@ public class GeneBankCreateBTree {
 				 */
 				boolean foundStart = false;
 				int bitNum = 1;
-				
-				int lineCount=0;
+
+				int lineCount = 0;
 				String sequence = "";
 				Scanner scan = new Scanner(new File(args[2]));
-				
 
 				while (scan.hasNextLine()) {
 					Scanner s2 = new Scanner(scan.nextLine());
@@ -87,14 +86,12 @@ public class GeneBankCreateBTree {
 
 						if (s.equals("ORIGIN")) {
 							foundStart = true;
-							System.out.println(foundStart);
 
 						} else if (s.equals("//")) {
 							foundStart = false;
 
 							bitNum = bitNum - sequence.length();
 							sequence = "";
-							System.out.println(foundStart);
 
 						}
 
@@ -117,49 +114,46 @@ public class GeneBankCreateBTree {
 
 											sequence += c;
 											bitNum++;
-											
+
 											if (sequence.length() == k) {
-												
+
 												lineCount++;
-												System.out.println((bitNum  - sequence.length()) + ": "+  sequence);
-												
-												for (int h = 0 ; h < k ; h++) {
-													
-													if(sequence.charAt(h) == 'a'||sequence.charAt(h) == 'A') {
+												System.out.println((bitNum - sequence.length()) + ": " + sequence);
+
+												for (int h = 0; h < k; h++) {
+
+													if (sequence.charAt(h) == 'a' || sequence.charAt(h) == 'A') {
 														s += "00";
 														continue;
 													}
-													if(sequence.charAt(h) == 't'|| sequence.charAt(h) == 'T') {
+													if (sequence.charAt(h) == 't' || sequence.charAt(h) == 'T') {
 														s += "11";
 														continue;
 													}
-													if(sequence.charAt(h) == 'c'|| sequence.charAt(h) == 'C') {
+													if (sequence.charAt(h) == 'c' || sequence.charAt(h) == 'C') {
 														s += "01";
 														continue;
 													}
-													if(sequence.charAt(h) == 'g'|| sequence.charAt(h) == 'G') {
+													if (sequence.charAt(h) == 'g' || sequence.charAt(h) == 'G') {
 														s += "10";
 														continue;
 													}
-														
+
 												}
 												/*
-												 * creating long value 
+												 * creating long value
 												 */
-												for(int j = s.length()-1 ; j >= 0; j--) {
-													if(s.charAt(j)=='1') {
-														stream += Math.pow(2,j);
+												for (int j = s.length() - 1; j >= 0; j--) {
+													if (s.charAt(j) == '1') {
+														stream += Math.pow(2, j);
 													}
 												}
-												
-											
 
 												/*
 												 * if the cache is initialized then it will add the object to the cache
 												 */
 												if (Integer.parseInt(args[0]) == 1) {
-													
-													
+
 													TreeObject n = new TreeObject(stream, 1, sequence);
 
 													if (thisCache.getObject(n) == false) {
@@ -171,11 +165,8 @@ public class GeneBankCreateBTree {
 												}
 
 												// pass the object to the btree class
-												
-												
 
 												sequence = "";
-												s = "";
 												stream = 0;
 											}
 										}
@@ -191,7 +182,6 @@ public class GeneBankCreateBTree {
 
 				}
 				scan.close();
-				System.out.println(lineCount);
 
 				/*
 				 * debugging level
@@ -216,14 +206,14 @@ public class GeneBankCreateBTree {
 						 * debug level 0 or 1 (optional)
 						 */
 					} else {
-					
+
 						throw new Exception(); // invalid debug value given
 
 					}
 				}
 
 			} else {
-				
+
 				throw new Exception(); // required arguments do not exist
 
 			}
