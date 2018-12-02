@@ -1,5 +1,4 @@
 
-
 import java.io.File;
 import java.util.Scanner;
 
@@ -122,7 +121,7 @@ public class GeneBankCreateBTree {
 											if (sequence.length() == k) {
 												
 												lineCount++;
-												 System.out.println((bitNum  - sequence.length()) + ": "+  sequence);
+												System.out.println((bitNum  - sequence.length()) + ": "+  sequence);
 												
 												for (int h = 0 ; h < k ; h++) {
 													
@@ -144,18 +143,16 @@ public class GeneBankCreateBTree {
 													}
 														
 												}
-												
-												for(int j = 0 ; j < s.length(); j++) {
+												/*
+												 * creating long value 
+												 */
+												for(int j = s.length() ; j >= 0; j--) {
 													if(s.charAt(j)=='1') {
 														stream += Math.pow(2,j);
 													}
 												}
 												
-												
-												
 											
-												
-						
 
 												/*
 												 * if the cache is initialized then it will add the object to the cache
@@ -179,7 +176,7 @@ public class GeneBankCreateBTree {
 
 												sequence = "";
 												s = "";
-												stream=0;
+												stream = 0;
 											}
 										}
 
