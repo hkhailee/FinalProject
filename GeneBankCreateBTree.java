@@ -146,7 +146,7 @@ public class GeneBankCreateBTree {
 												/*
 												 * creating long value 
 												 */
-												for(int j = s.length() ; j >= 0; j--) {
+												for(int j = s.length()-1 ; j >= 0; j--) {
 													if(s.charAt(j)=='1') {
 														stream += Math.pow(2,j);
 													}
