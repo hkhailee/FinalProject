@@ -24,8 +24,6 @@ public class BTreeNode {
 		nextOpenSpot = 0;
 		objects = new ArrayList<TreeObject>();
 		childPtrs = new ArrayList<Integer>();
-		objects.add(new TreeObject(-1, -1));
-		childPtrs.add(-1);
 		this.maxObjects = maxObjects;
 		this.maxPtrs = maxObjects + 1;
 		parentPtr = 0;
@@ -56,11 +54,11 @@ public class BTreeNode {
 	}
 	
 	public int getNumObjects() {
-		return objects.size()-1;
+		return objects.size();
 	}
 	
 	public int getNumChldPtrs() {
-		return childPtrs.size() - 1;
+		return childPtrs.size();
 	}
 	
 	public void setObject(int index, TreeObject object) {
@@ -135,7 +133,6 @@ public class BTreeNode {
 	    
 	    //set child pointers
 	    List<Integer> ptrs = new ArrayList<Integer>();
-	    ptrs.add(-1);
 	    for (int i = 0; i < maxPtrs; i++) {
 	    	int x = raf.readInt();
 	    	if (x != -1) {
@@ -177,7 +174,7 @@ public class BTreeNode {
 	    
 	    //set child pointers
 	    List<Integer> ptrs = new ArrayList<Integer>();
-	    ptrs.add(-1);
+	    
 	    for (int i = 0; i < maxPtrs; i++) {
 	    	int x = raf.readInt();
 	    	if (x != -1) {
