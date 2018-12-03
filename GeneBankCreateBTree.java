@@ -6,6 +6,12 @@ import java.util.Scanner;
 
 public class GeneBankCreateBTree {
 
+	static Cache<TreeObject> thisCache = null;
+	static BTree tree;
+	static int cacheSize;
+	static int subSize = 0; // sequence length
+	static int degree = 0; // degree of tree
+	static boolean cacheInitialized = false;
 	/**
 	 * @param args
 	 */
@@ -13,12 +19,7 @@ public class GeneBankCreateBTree {
 	 * @param args
 	 */
 	public static void main(String args[]) {
-		Cache<TreeObject> thisCache = null;
-		BTree tree;
-		int cacheSize;
-		int k; // sequence length
-		int degree = 0; // degree of tree
-		boolean cacheInitialized = false;
+		
 		
 		
 
@@ -55,9 +56,10 @@ public class GeneBankCreateBTree {
 					degree = Integer.parseInt(args[1]); // takes in degree t
 				}
 				File file = new File(args[2]); // takes in file name
-//				unsure on the file to be passed
+
 				File dump = new File("dump");
 				FileWriter write = new FileWriter(dump);
+//				subSize = Integer.parseInt(args[3]);
 //				write.write("BTree Data: ");
 				/*
 				 * creating btree
@@ -77,12 +79,11 @@ public class GeneBankCreateBTree {
 
 				if (Integer.parseInt(args[3]) >= 1 || Integer.parseInt(args[3]) <= 31) {
 
-					k = Integer.parseInt(args[3]); // Substring length
+					subSize = Integer.parseInt(args[3]); // Substring length
 				} else {
 
 					System.out.println(Integer.parseInt(args[3]));
-					throw new Exception(
-							"sequnce length k must be greater than or equal to 1 and less than or equal to 31");
+					printUsage();
 
 				}
 
@@ -94,7 +95,7 @@ public class GeneBankCreateBTree {
 				 */
 				boolean foundStart = false;
 				int bitNum = 1;
-				String bineString = ""; 
+//				String bineString = ""; 
 				int lineCount= 0;
 				String subString = "";
 				Scanner scan = new Scanner(new File(args[2]));
@@ -131,53 +132,33 @@ public class GeneBankCreateBTree {
 								subString += token;
 								bitNum++;
 //								Possibly make a method everytime the length of the sub string is reached
-							}				
-										System.out.println((bitNum  - subString.length()) + ": "+  subString);
-										
-//										potentially a converter method when substring is full 
-										for (int i = 0 ; i < k ; i++) {
-											
-											if(subString.charAt(i) == 'a'||subString.charAt(i) == 'A') {
-												bineString += "00";
-												continue;
-											} else if(subString.charAt(i) == 't'|| subString.charAt(i) == 'T') {
-												bineString += "11";
-												continue;
-											} else if(subString.charAt(i) == 'c'|| subString.charAt(i) == 'C') {
-												bineString += "01";
-												continue;
-											} else if(subString.charAt(i) == 'g'|| subString.charAt(i) == 'G') {
-												bineString += "10";
-												continue;
-											}	
-										}
-										/*
-										 * creating long value 
-										 */
-										
-										long stream = Long.parseLong(bineString);
+							}		
+							
+							if (subSize == subString.length()) {
+								long stream = toLong(subString);
+	
+								/*
+								 * if the cache is initialized then it will add the object to the cache
+								 */
+								if (cacheInitialized) {
 									
+									obj = new TreeObject(stream);
 
-										/*
-										 * if the cache is initialized then it will add the object to the cache
-										 */
-										if (cacheInitialized) {
-											
-											obj = new TreeObject(stream);
+									if (thisCache.getObject(obj) == false) {
 
-											if (thisCache.getObject(obj) == false) {
-
-												thisCache.addObject(obj);
-											} else {
-												thisCache.moveToTop(obj);
-											}
-											
-											// pass the object to the btree class
-											tree.insert(obj);
-										}
-
+										thisCache.addObject(obj);
+									} else {
+										thisCache.moveToTop(obj);
+									}
+									
+									// pass the object to the btree class
+									tree.insert(obj);
+								}
+								
+								
+							}
 										subString = "";
-										bineString = "";
+										
 							}
 							
 						}
@@ -215,6 +196,37 @@ public class GeneBankCreateBTree {
 				System.out.println(
 					"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
 		}
+	}
+
+	private static long toLong(String subString) {
+		
+		String bineString = "";
+		for (int i = 0 ; i < subSize ; i++) {
+			
+			if(subString.charAt(i) == 'a'||subString.charAt(i) == 'A') {
+				bineString += "00";
+				continue;
+			} else if(subString.charAt(i) == 't'|| subString.charAt(i) == 'T') {
+				bineString += "11";
+				continue;
+			} else if(subString.charAt(i) == 'c'|| subString.charAt(i) == 'C') {
+				bineString += "01";
+				continue;
+			} else if(subString.charAt(i) == 'g'|| subString.charAt(i) == 'G') {
+				bineString += "10";
+				continue;
+			}	
+			
+			
+			
+		}
+		/*
+		 * creating long value 
+		 */
+		
+		long stream = Long.parseLong(bineString);
+	
+		return stream;
 	}
 
 	private static void printUsage() {
