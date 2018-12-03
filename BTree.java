@@ -11,15 +11,17 @@ public class BTree {
 	private int currentLoad;
 	int cursor; //byte position. always point to the end of the file
 	private BTreeNode nodeOnMemory;
+	private RandomAccessFile raf;
 	File file;
-	public BTree(int t, File fileName) throws Exception {
+	public BTree(int t, File fileName, RandomAccessFile raf) throws Exception {
 		this.t = t;
-		root = new BTreeNode(true, 0, maxLoad);
+		this.raf = raf;
+		root = new BTreeNode(true, 0, maxLoad, raf);
 		BTreeNode x = root;
 		nodeOnMemory = x;
 		x.setIsLeaf(1);
 		x.setNumObjects(0);
-		x.diskWrite(file);
+		x.diskWrite();
 		currentLoad = 0;
 		cursor = 0;
 		this.file = fileName;
@@ -52,10 +54,10 @@ public class BTree {
 	// When a node has a full child at given index this method will split that child node
 	private void splitChild(BTreeNode parentNode, int index) throws Exception {
 		//Creates a new node that will house the data for the right child after the split
-		BTreeNode newRightNode = new BTreeNode(parentNode.getChild(index).getIsLeaf(), allocateNode(), (2*t)-1);
+		BTreeNode newRightNode = new BTreeNode(parentNode.getChild(index).getIsLeaf(), allocateNode(), (2*t)-1, raf);
 		
 		//Pulls the full child and stores 
-		BTreeNode newLeftNode = parentNode.diskRead(index, file);
+		BTreeNode newLeftNode = parentNode.diskRead(index);
 		
 		//Puts objects from the full node to the right node 
 		for (int j = 1; j < t; j++) {
@@ -85,9 +87,9 @@ public class BTree {
 		newLeftNode.setNumObjects(t-1);
 		newRightNode.setNumObjects(t-1);
 		
-		newLeftNode.diskWrite(file);
-		newRightNode.diskWrite(file);		
-		parentNode.diskWrite(file);		
+		newLeftNode.diskWrite();
+		newRightNode.diskWrite();		
+		parentNode.diskWrite();		
 	
 	}
 	
@@ -95,7 +97,7 @@ public class BTree {
 		BTreeNode tempRoot = root;
 		
 		if (root.getNumObjects() == maxLoad) { //When root node is full
-			BTreeNode newRoot = new BTreeNode(false, allocateNode(), maxLoad);
+			BTreeNode newRoot = new BTreeNode(false, allocateNode(), maxLoad, raf);
 			newRoot.setChild(1, tempRoot);
 			splitChild(newRoot, 1);
 			insertNonfull(newRoot, input);
@@ -118,7 +120,7 @@ public class BTree {
 			ancestor.setObject(i+1, input);
 			ancestor.setNumObjects(1 + ancestor.getNumObjects());
 			
-			ancestor.diskWrite(file);
+			ancestor.diskWrite();
 			
 			
 		} else { //If relevant node is internal
@@ -129,7 +131,7 @@ public class BTree {
 			i++;
 			
 
-			nodeOnMemory = ancestor.diskRead(i, file);
+			nodeOnMemory = ancestor.diskRead(i);
 			
 			
 			
@@ -139,14 +141,14 @@ public class BTree {
 			splitChild(ancestor, i);
 			
 
-			nodeOnMemory = ancestor.diskRead(i, file);
+			nodeOnMemory = ancestor.diskRead(i);
 			
 			
 			//After the split will enter if input is larger than all objects in left node
 			if (input.getValue() > ancestor.getObject(i).getValue()) {
 				
 
-				nodeOnMemory = ancestor.diskRead(i+1, file);
+				nodeOnMemory = ancestor.diskRead(i+1);
 			}
 		} 
 		
