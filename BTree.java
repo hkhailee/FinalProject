@@ -4,7 +4,7 @@ import java.io.RandomAccessFile;
 public class BTree {
 
 	private int t;	//this is the degree t of the BTree
-	private int maxLoad = (2*t)-1;
+	private int maxLoad;
 	private int size; //the size (in nodes) of the BTree
 	private int rootPosition;
 	private BTreeNode root;
@@ -23,6 +23,7 @@ public class BTree {
 		x.diskWrite();
 		currentLoad = 0;
 		cursor = 0;
+		maxLoad = (2*t)-1;
 	}
 	
 	
@@ -92,7 +93,8 @@ public class BTree {
 	
 	public void insert(TreeObject input) throws Exception {
 		BTreeNode tempRoot = root;
-		
+		System.out.println(root.getNumObjects());
+		System.out.println(22);
 		if (root.getNumObjects() == maxLoad) { //When root node is full
 			BTreeNode newRoot = new BTreeNode(false, allocateNode(), maxLoad, raf);
 			newRoot.setChild(1, tempRoot);
@@ -104,7 +106,8 @@ public class BTree {
 	}
 	
 	private void insertNonfull(BTreeNode ancestor, TreeObject input) throws Exception {
-		int i = ancestor.getNumObjects();
+		boolean done = false;
+		int i = ancestor.getNumObjects() ;
 		//Will recurse to traverse the tree until a leaf is reach for insertion 
 		if (ancestor.getIsLeaf()) {
 			//Iterates through node until the insert position is located
@@ -115,10 +118,10 @@ public class BTree {
 			}
 			//Adds the input object to the vacant position
 			ancestor.setObject(i+1, input);
-			ancestor.setNumObjects(1 + ancestor.getNumObjects());
-			
+//			ancestor.setNumObjects(1 + ancestor.getNumObjects());
+
 			ancestor.diskWrite();
-			
+			done = true;
 			
 		} else { //If relevant node is internal
 			//Iterates through the node until the relevant child node is located and stores it to memory, will recurse on that child
@@ -135,6 +138,8 @@ public class BTree {
 		}
 		//Splits node if newly accessed node is full
 		if (nodeOnMemory.getNumObjects() == maxLoad) {
+			System.out.println(i);
+			System.out.println(nodeOnMemory.getNumObjects());
 			splitChild(ancestor, i);
 			
 
@@ -150,7 +155,9 @@ public class BTree {
 		} 
 		
 		//If object fails to insert this will cause to run recursively until successful, the node given as a parameter must be saved to memory 
+		if (done == false) {
 		insertNonfull(nodeOnMemory, input);
+		}
 	}
 	
 	
