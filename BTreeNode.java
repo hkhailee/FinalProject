@@ -108,7 +108,7 @@ public class BTreeNode {
 	    	raf.writeInt(-1);
 	    }
 	    for (i = 0; i < objects.size(); i++) {
-	    	raf.writeLong(objects.get(i).getSequence());
+	    	raf.writeLong(objects.get(i).getStream());
 	    	raf.writeInt(objects.get(i).getFrequency());
 	    }
 	    for (j = i; i < maxObjects; i++) {
