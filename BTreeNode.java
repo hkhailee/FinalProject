@@ -14,12 +14,13 @@ public class BTreeNode {
 	public int maxObjects;
 	private int maxPtrs;
 	private int nextOpenSpot;
+	private RandomAccessFile raf;
 	private List<BTreeNode> children;
 	private BTreeNode parent;
-	public BTreeNode(boolean isLeaf, int byteOffset, int maxObjects) {
+	public BTreeNode(boolean isLeaf, int byteOffset, int maxObjects, RandomAccessFile raf) {
 		this.isLeaf = isLeaf;
 		this.byteOffset = byteOffset;
-		this.
+		this.raf = raf;
 		nextOpenSpot = 0;
 		objects = new ArrayList<TreeObject>();
 		childPtrs = new ArrayList<Integer>();
@@ -89,8 +90,7 @@ public class BTreeNode {
 		return this.children.get(index);
 	}
 	
-	public void diskWrite(File file) throws Exception {
-		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+	public void diskWrite() throws Exception {
 	    raf.seek(byteOffset); // Go to byte at offset position 5.
 	    raf.writeInt(byteOffset);
 	    raf.writeInt(objects.size());
@@ -122,9 +122,8 @@ public class BTreeNode {
 	 * Return a BTreeNode representing the ith child of this node
 	 * @param i
 	 */
-	public BTreeNode diskRead(int childIndex, File file) throws Exception {
-		BTreeNode newNode = new BTreeNode(false, childPtrs.get(childIndex), maxObjects);
-		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+	public BTreeNode diskRead(int childIndex) throws Exception {
+		BTreeNode newNode = new BTreeNode(false, childPtrs.get(childIndex), maxObjects, raf);
 	    raf.seek(childPtrs.get(childIndex));
 	    raf.readInt();
 	    newNode.setNumObjects(raf.readInt());
@@ -156,18 +155,17 @@ public class BTreeNode {
 	    List<BTreeNode> allChildren = new ArrayList<BTreeNode>();
 	    allChildren.add(null);
 	    for (int i = 1; i < newNode.childPtrs.size(); i++) {
-	    	allChildren.add(diskReadChildren(childPtrs.get(i), file));
+	    	allChildren.add(diskReadChildren(childPtrs.get(i)));
 	    }
 	    if (newNode.parentPtr != -1) {
-	    	newNode.setParent(diskReadChildren(newNode.getParentPointer(), file));
+	    	newNode.setParent(diskReadChildren(newNode.getParentPointer()));
 	    }
 	    return newNode;
 	}
 	
 	
-	private BTreeNode diskReadChildren(int bytePos, File file) throws Exception {
-		BTreeNode newNode = new BTreeNode(false, bytePos, maxObjects);
-		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+	private BTreeNode diskReadChildren(int bytePos) throws Exception {
+		BTreeNode newNode = new BTreeNode(false, bytePos, maxObjects, raf);
 	    raf.seek(bytePos);
 	    raf.readInt();
 	    newNode.setNumObjects(raf.readInt());
