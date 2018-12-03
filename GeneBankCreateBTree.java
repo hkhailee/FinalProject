@@ -1,5 +1,7 @@
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.RandomAccessFile;
 import java.util.Scanner;
@@ -11,7 +13,9 @@ public class GeneBankCreateBTree {
 	static int cacheSize;
 	static int subSize = 0; // sequence length
 	static int degree = 0; // degree of tree
-	static boolean cacheInitialized = false;
+	static boolean cacheInitialized = true;
+	static File file;
+	static File dump;
 	/**
 	 * @param args
 	 */
@@ -55,10 +59,10 @@ public class GeneBankCreateBTree {
 				} else {
 					degree = Integer.parseInt(args[1]); // takes in degree t
 				}
-				File file = new File(args[2]); // takes in file name
+				file = new File("dump2"); // takes in file name
 
-				File dump = new File("dump");
-				FileWriter write = new FileWriter(dump);
+//				dump = new File("dump");
+//				FileWriter write = new FileWriter(dump);
 //				subSize = Integer.parseInt(args[3]);
 //				write.write("BTree Data: ");
 				/*
@@ -78,8 +82,9 @@ public class GeneBankCreateBTree {
 				 */
 
 				if (Integer.parseInt(args[3]) >= 1 || Integer.parseInt(args[3]) <= 31) {
-
+					
 					subSize = Integer.parseInt(args[3]); // Substring length
+					System.out.println(subSize);
 				} else {
 
 					System.out.println(Integer.parseInt(args[3]));
@@ -98,15 +103,25 @@ public class GeneBankCreateBTree {
 //				String bineString = ""; 
 				int lineCount= 0;
 				String subString = "";
-				Scanner scan = new Scanner(new File(args[2]));
+				File file1 = new File(args[2]);
+//				Scanner scan = new Scanner(file1);
 				TreeObject obj;
+				System.out.println(args[2]);
+				int count = 0;
+//				System.out.println(scan.nextLine());
+				StringBuilder sb = new StringBuilder();
 				
-
-				while (scan.hasNextLine()) {
-					String lineToken = scan.nextLine();
+				BufferedReader input = new BufferedReader(new FileReader(file1)); 
+				String lineToken;
+				
+				while ((lineToken = input.readLine()) != null && !lineToken.isEmpty())  {
+//					String lineToken = scan.nextLine();
 					Scanner lineScan = new Scanner(lineToken);
+//					System.out.println(lineToken);
 
-					if (lineToken.equals("ORIGIN")) {
+					String str = lineToken.replaceAll("\\s", "");
+					if (str.equals("ORIGIN")) {
+						System.out.println(1);
 						foundStart = true;
 						System.out.println("foundStart: " + foundStart);
 
@@ -114,29 +129,36 @@ public class GeneBankCreateBTree {
 						foundStart = false;
 
 						bitNum = bitNum - subString.length();
-						subString = "";
+						sb = new StringBuilder();
 						System.out.println("foundStart: " + foundStart);
 
 					} else if (foundStart == true) {
 						lineCount++;
-						
-						while (lineScan.hasNext()) {
-							String token = lineScan.next();
-
-							if (token == "n" || token == "N") {
+						for (int i =0; i < lineToken.length(); i++) {
+							char token = lineToken.charAt(i);
+							
+							if (token == 'n' || token == 'N') {
 //								bitNum = bitNum - subString.length();
-								subString = "";
-
-							} else if (token == "a" || token == "t" || token == "c" || token == "g" || token == "A" || token == "T" || token == "C" || token == "G") {
-
-								subString += token;
+								sb = new StringBuilder();
+								count = 0;
+							} else if (token == 'a' || token == 't' || token == 'c' || token == 'g' || token == 'A' || token == 'T' || token == 'C' || token == 'G') {
+								
+								sb.append(token);
+								count++;
 								bitNum++;
 //								Possibly make a method everytime the length of the sub string is reached
-							}		
+								
+							}
 							
-							if (subSize == subString.length()) {
-								long stream = toLong(subString);
-	
+							if (sb.length() > subSize) {
+								String st = sb.toString();
+								sb = new StringBuilder();
+								sb.append(st.substring(1,subSize +1));
+							}
+//							System.out.println(subString);
+							if (subSize == sb.length()) {
+								long stream = toLong(sb.toString());
+								
 								/*
 								 * if the cache is initialized then it will add the object to the cache
 								 */
@@ -151,8 +173,11 @@ public class GeneBankCreateBTree {
 										thisCache.moveToTop(obj);
 									}
 									
-									// pass the object to the btree class
+									// pass the object to the btree class\
+									System.out.println(sb.toString());
 									tree.insert(obj);
+									
+									
 								}
 								
 								
@@ -164,7 +189,7 @@ public class GeneBankCreateBTree {
 						}
 					lineScan.close();
 					}
-				scan.close();
+//				scan.close();
 				System.out.println(lineCount);
 			
 				
