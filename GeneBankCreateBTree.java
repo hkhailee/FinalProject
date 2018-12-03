@@ -1,21 +1,33 @@
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.RandomAccessFile;
 import java.util.Scanner;
 
 public class GeneBankCreateBTree {
 
+	/**
+	 * @param args
+	 */
+	/**
+	 * @param args
+	 */
 	public static void main(String args[]) {
 		Cache<TreeObject> thisCache = null;
+		BTree tree;
 		int cacheSize;
 		int k; // sequence length
 		int degree = 0; // degree of tree
-		long stream = 0;
-		String s = "";
+		boolean cacheInitialized = false;
+		
+		
 
 		try {
 
-			// Checks to see if required size is present
-			if (args.length >= 4) {
+			// Checks to see if the correct amount of parameters were presented 
+			if (args.length < 4) {
+				printUsage();
+			}	
 
 				/*
 				 * if args 0 is 1 then use cache else no cache uses args 4 to get cache size
@@ -35,7 +47,7 @@ public class GeneBankCreateBTree {
 
 				// if degree is 0 then find optimal degree and use that
 				if (Integer.parseInt(args[1]) == 0) {
-
+					
 					// ((2t-1)application object size) + ((2t+1)pointer object size) + (BtreeNode
 					// metadata size) <= 4096
 
@@ -43,20 +55,29 @@ public class GeneBankCreateBTree {
 					degree = Integer.parseInt(args[1]); // takes in degree t
 				}
 				File file = new File(args[2]); // takes in file name
-
+//				unsure on the file to be passed
+				File dump = new File("dump");
+				FileWriter write = new FileWriter(dump);
+//				write.write("BTree Data: ");
 				/*
 				 * creating btree
 				 */
-
-				// BTree Tree = new BTree(degree, file);
+				
+				RandomAccessFile raf = new RandomAccessFile(file, "rw");
+				tree = new BTree(degree, raf);
+				
+				
+				if (Integer.parseInt(args[0]) == 1) {
+					cacheInitialized = true;
+				}
 
 				/*
 				 * checks to see if k is within range
 				 */
 
-				if (Integer.parseInt(args[3]) > 1 || Integer.parseInt(args[3]) < 31) {
+				if (Integer.parseInt(args[3]) >= 1 || Integer.parseInt(args[3]) <= 31) {
 
-					k = Integer.parseInt(args[3]); // Sequence length
+					k = Integer.parseInt(args[3]); // Substring length
 				} else {
 
 					System.out.println(Integer.parseInt(args[3]));
@@ -73,159 +94,132 @@ public class GeneBankCreateBTree {
 				 */
 				boolean foundStart = false;
 				int bitNum = 1;
-
-				int lineCount = 0;
-				String sequence = "";
+				String bineString = ""; 
+				int lineCount= 0;
+				String subString = "";
 				Scanner scan = new Scanner(new File(args[2]));
+				TreeObject obj;
+				
 
 				while (scan.hasNextLine()) {
-					Scanner s2 = new Scanner(scan.nextLine());
+					String lineToken = scan.nextLine();
+					Scanner lineScan = new Scanner(lineToken);
 
-					while (s2.hasNext()) {
-						s = s2.next();
+					if (lineToken.equals("ORIGIN")) {
+						foundStart = true;
+						System.out.println("foundStart: " + foundStart);
 
-						if (s.equals("ORIGIN")) {
-							foundStart = true;
+					} else if (lineToken.equals("//")) {
+						foundStart = false;
 
-						} else if (s.equals("//")) {
-							foundStart = false;
+						bitNum = bitNum - subString.length();
+						subString = "";
+						System.out.println("foundStart: " + foundStart);
 
-							bitNum = bitNum - sequence.length();
-							sequence = "";
+					} else if (foundStart == true) {
+						lineCount++;
+						
+						while (lineScan.hasNext()) {
+							String token = lineScan.next();
 
-						}
+							if (token == "n" || token == "N") {
+//								bitNum = bitNum - subString.length();
+								subString = "";
 
-						else if (foundStart == true) {
+							} else if (token == "a" || token == "t" || token == "c" || token == "g" || token == "A" || token == "T" || token == "C" || token == "G") {
 
-							for (int i = 0; i < s.length(); i++) {
+								subString += token;
+								bitNum++;
+//								Possibly make a method everytime the length of the sub string is reached
+							}				
+										System.out.println((bitNum  - subString.length()) + ": "+  subString);
+										
+//										potentially a converter method when substring is full 
+										for (int i = 0 ; i < k ; i++) {
+											
+											if(subString.charAt(i) == 'a'||subString.charAt(i) == 'A') {
+												bineString += "00";
+												continue;
+											} else if(subString.charAt(i) == 't'|| subString.charAt(i) == 'T') {
+												bineString += "11";
+												continue;
+											} else if(subString.charAt(i) == 'c'|| subString.charAt(i) == 'C') {
+												bineString += "01";
+												continue;
+											} else if(subString.charAt(i) == 'g'|| subString.charAt(i) == 'G') {
+												bineString += "10";
+												continue;
+											}	
+										}
+										/*
+										 * creating long value 
+										 */
+										
+										long stream = Long.parseLong(bineString);
+									
 
-								char c = s.charAt(i);
+										/*
+										 * if the cache is initialized then it will add the object to the cache
+										 */
+										if (cacheInitialized) {
+											
+											obj = new TreeObject(stream);
 
-								if (c == 'n' || c == 'N') {
-									bitNum = bitNum - sequence.length();
-									sequence = "";
+											if (thisCache.getObject(obj) == false) {
 
-								}
-
-								else {
-									if (c == 'a' || c == 't' || c == 'c' || c == 'g' || c == 'A' || c == 'T' || c == 'C'
-											|| c == 'G') {
-										if (sequence.length() < k) {
-
-											sequence += c;
-											bitNum++;
-
-											if (sequence.length() == k) {
-
-												lineCount++;
-												System.out.println((bitNum - sequence.length()) + ": " + sequence);
-
-												for (int h = 0; h < k; h++) {
-
-													if (sequence.charAt(h) == 'a' || sequence.charAt(h) == 'A') {
-														s += "00";
-														continue;
-													}
-													if (sequence.charAt(h) == 't' || sequence.charAt(h) == 'T') {
-														s += "11";
-														continue;
-													}
-													if (sequence.charAt(h) == 'c' || sequence.charAt(h) == 'C') {
-														s += "01";
-														continue;
-													}
-													if (sequence.charAt(h) == 'g' || sequence.charAt(h) == 'G') {
-														s += "10";
-														continue;
-													}
-
-												}
-												/*
-												 * creating long value
-												 */
-												for (int j = s.length() - 1; j >= 0; j--) {
-													if (s.charAt(j) == '1') {
-														stream += Math.pow(2, j);
-													}
-												}
-
-												/*
-												 * if the cache is initialized then it will add the object to the cache
-												 */
-												if (Integer.parseInt(args[0]) == 1) {
-
-													TreeObject n = new TreeObject(stream, 1, sequence);
-
-													if (thisCache.getObject(n) == false) {
-
-														thisCache.addObject(n);
-													} else {
-														thisCache.moveToTop(n);
-													}
-												}
-
-												// pass the object to the btree class
-
-												sequence = "";
-												stream = 0;
+												thisCache.addObject(obj);
+											} else {
+												thisCache.moveToTop(obj);
 											}
+											
+											// pass the object to the btree class
+											tree.insert(obj);
 										}
 
-									}
-
-								}
+										subString = "";
+										bineString = "";
 							}
-
+							
 						}
-
+					lineScan.close();
 					}
-
-				}
 				scan.close();
+				System.out.println(lineCount);
+			
+				
 
 				/*
 				 * debugging level
 				 */
 
-				if (args.length > 5) {
-					if (Integer.parseInt(args[5]) == 0 || Integer.parseInt(args[5]) == 1) {
-						if (Integer.parseInt(args[5]) == 0) {
-							// Any diagnostic messages, help and status messages must be be printed on
-							// standard error stream
-						}
-						if (Integer.parseInt(args[5]) == 1) {
-							// The program writes a text file named dump, that has the following line
-							// format:
-							// DNA string: frequency. The dump file contains DNA string (corresponding to
-							// the key stored) and frequency in an inorder traversal. You can find a dump
-							// file
-							System.out.println(thisCache.toString());
+				if (args.length == 6) {
+					if (Integer.parseInt(args[5]) == 0) {
+						// Any diagnostic messages, help and status messages must be be printed on
+						// standard error stream
+					} else if (Integer.parseInt(args[5]) == 1) {
+						// The program writes a text file named dump, that has the following line
+						// format:
+						// DNA string: frequency. The dump file contains DNA string (corresponding to
+						// the key stored) and frequency in an inorder traversal. You can find a dump
+						// file
+						System.out.println(thisCache.toString());
 
-						}
-						/*
-						 * debug level 0 or 1 (optional)
-						 */
 					} else {
-
-						throw new Exception(); // invalid debug value given
-
+						printUsage(); // invalid debug value given
 					}
 				}
 
-			} else {
+			} catch (Exception e) {
+				e.printStackTrace();
 
-				throw new Exception(); // required arguments do not exist
-
-			}
-		}
-
-		catch (Exception e) {
-			e.printStackTrace();
-
-			System.out.println(
+				System.out.println(
 					"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
-
 		}
+	}
+
+	private static void printUsage() {
+		System.out.println("Your input does not fit the parameters domain");
+		
 	}
 
 }
