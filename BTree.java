@@ -12,8 +12,7 @@ public class BTree {
 	int cursor; //byte position. always point to the end of the file
 	private BTreeNode nodeOnMemory;
 	private RandomAccessFile raf;
-	File file;
-	public BTree(int t, File fileName, RandomAccessFile raf) throws Exception {
+	public BTree(int t, RandomAccessFile raf) throws Exception {
 		this.t = t;
 		this.raf = raf;
 		root = new BTreeNode(true, 0, maxLoad, raf);
@@ -24,13 +23,11 @@ public class BTree {
 		x.diskWrite();
 		currentLoad = 0;
 		cursor = 0;
-		this.file = fileName;
 	}
 	
 	
 	private int allocateNode() throws Exception  {
 		int x = cursor;
-		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 	    raf.seek(cursor); // Go to byte at offset position 5.
 	    raf.writeInt(cursor);
 	    raf.writeInt(0);
