@@ -64,7 +64,10 @@ public class BTreeNode {
 	}
 	
 	public void setObject(int index, TreeObject object) {
-		objects.set(index, object);
+		if (index < objects.size()) {
+			objects.set(index, object);
+		}
+		else objects.add(object);
 	}
 	
 	public TreeObject getObject(int index) {
