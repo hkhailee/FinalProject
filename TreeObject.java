@@ -3,6 +3,7 @@ public class TreeObject implements Comparable<TreeObject> {
 	public long Stream;
 	public int freq;
 	private long Value;
+	public String seq;
 
 	public TreeObject(long stream) {
 		this.Stream = stream;
@@ -14,6 +15,7 @@ public class TreeObject implements Comparable<TreeObject> {
 		this.Stream = stream;
 		this.freq = frequency;
 		this.Value = stream;
+//		this.seq = dna;
 	}
 
 	public long getValue() {
@@ -48,10 +50,10 @@ public class TreeObject implements Comparable<TreeObject> {
 		return freq;
 	}
 
-//	public String getObject() {
-//
-//		return seq;
-//	}
+	public String getObject() {
+
+		return seq;
+	}
 
 }
 
