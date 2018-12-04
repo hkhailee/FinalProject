@@ -61,13 +61,11 @@ public class BTree {
 		//Puts objects from the full node to the right node 
 		for (int j = 1; j < t; j++) {
 			newRightNode.setObject(j, newLeftNode.getObject(j + t));
-			newLeftNode.removeObject(j + t);
 		}
 		if ( ! newLeftNode.getIsLeaf()) {
 			//now moving child pointers
 			for (int j = 1; j <= t; j++) {
 				newRightNode.setChild(j, newLeftNode.getChild(j + t));
-				newLeftNode.removeChild(j + t);
 			}
 		}
 		//Moving the parent node child pointers to add the right node
@@ -82,11 +80,18 @@ public class BTree {
 		}
 		//Moving the median object from the left node to the parent
 		parentNode.setObject(index, newLeftNode.getObject(t));
+		for (int j = newLeftNode.getNumObjects(); j > t; j--) {
+			newLeftNode.removeObject(j);
+			if ( ! newLeftNode.getIsLeaf()) {
+				newLeftNode.removeChild(j);
+			}
+		}
 		newLeftNode.removeObject(t);
 		//Updates all object counts for relevant nodes
 		parentNode.setNumObjects(1 + parentNode.getNumObjects());
 		newLeftNode.setNumObjects(t-1);
 		newRightNode.setNumObjects(t-1);
+		parentNode.setIsLeaf(0);
 		
 		newLeftNode.diskWrite();
 		newRightNode.diskWrite();		
@@ -102,6 +107,7 @@ public class BTree {
 			BTreeNode newRoot = new BTreeNode(false, allocateNode(), maxLoad, raf);
 			newRoot.setChild(1, tempRoot);
 			splitChild(newRoot, 1);
+			root = newRoot;
 			insertNonfull(newRoot, input);
 		} else {
 			insertNonfull (tempRoot, input);
