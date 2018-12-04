@@ -105,10 +105,19 @@ public class BTreeNode {
 		return this.children.get(index);
 	}
 	
+	public void removeChild(int index) {
+		children.remove(index);
+		childPtrs.remove(index);
+	}
+	
+	public void removeObject(int index) {
+		objects.remove(index);
+	}
+	
 	public void diskWrite() throws Exception {
 	    raf.seek(byteOffset); // Go to byte at offset position 5.
 	    raf.writeInt(byteOffset);
-	    raf.writeInt(objects.size());
+	    raf.writeInt(objects.size()-1);
 	    if (isLeaf) {
 	    	raf.writeInt(1);
 	    }
@@ -116,13 +125,13 @@ public class BTreeNode {
 	    raf.writeInt(parentPtr);
 	    int i, j;
 	    //Write all pointers. Unused pointers will be written as 0.
-	    for (i = 0; i < childPtrs.size(); i++) {
+	    for (i = 1; i < childPtrs.size(); i++) {
 	    	raf.writeInt(childPtrs.get(i));
 	    }
 	    for (j = i; j < maxPtrs; j++) {
 	    	raf.writeInt(-1);
 	    }
-	    for (i = 0; i < objects.size(); i++) {
+	    for (i = 1; i < objects.size(); i++) {
 	    	raf.writeLong(objects.get(i).getStream());
 	    	raf.writeInt(objects.get(i).getFrequency());
 	    }
@@ -143,7 +152,7 @@ public class BTreeNode {
 	    raf.readInt();
 	    newNode.setNumObjects(raf.readInt());
 	    newNode.setIsLeaf(raf.readInt());
-	    newNode.setParentPointer(raf.readInt());
+	    newNode.setParentPointer(byteOffset);
 	    
 	    //set child pointers
 	    List<Integer> ptrs = new ArrayList<Integer>();
