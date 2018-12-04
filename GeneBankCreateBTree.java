@@ -1,11 +1,3 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.RandomAccessFile;
-import java.util.Scanner;
-
 public class GeneBankCreateBTree {
 
 	static Cache<TreeObject> thisCache = null;
@@ -80,10 +72,10 @@ public class GeneBankCreateBTree {
 			// need to write to file from diskwrite...
 			file = new File("dump"); // takes in file name 
 
-//				dump = new File("dump");
-			// FileWriter write = new FileWriter(dump);
+		dump = new File("dump");
+			FileWriter write = new FileWriter(dump);
 //				subSize = Integer.parseInt(args[3]);
-//				write.write("BTree Data: ");
+				//write.write("BTree Data: ");
 			
 			/*
 			 * creating btree
@@ -144,6 +136,8 @@ public class GeneBankCreateBTree {
 //					String lineToken = scan.nextLine();
 				Scanner lineScan = new Scanner(lineToken);
 //					System.out.println(lineToken);
+				
+				
 
 				String str = lineToken.replaceAll("\\s", "");
 				if (str.equals("ORIGIN")) {
@@ -185,7 +179,7 @@ public class GeneBankCreateBTree {
 //							System.out.println(subString);
 						if (subSize == sb.length()) {
 							long stream = toLong(sb.toString());
-							// write.write(lineToken);
+							
 
 							/*
 							 * if the cache is initialized then it will add the object to the cache
@@ -237,6 +231,9 @@ public class GeneBankCreateBTree {
 					if (cacheInitialized) {
 						System.out.println(thisCache.toString());
 					} else {
+						
+						//write.println( tree.inOrder( tree.root));
+						//tree.inOrder(thisCache)
 						System.out.println(dump);
 					}
 
@@ -289,8 +286,6 @@ public class GeneBankCreateBTree {
 
 	private static void printUsage() {
 		
-		
-
 		if (fileNot == true) {
 			System.err.println("file does not exist");
 		} else if (error = true) {
@@ -301,4 +296,6 @@ public class GeneBankCreateBTree {
 		
 
 	}
+
+
 }
