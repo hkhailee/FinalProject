@@ -177,8 +177,9 @@ public class GeneBankCreateBTree {
 									
 									tree.insert(obj);
 								
+								//	System.out.println(obj.freq);
 									System.out.println(sb.toString());
-									System.out.println(stream);
+								//	System.out.println(stream);
 								}
 								
 								
@@ -215,7 +216,7 @@ public class GeneBankCreateBTree {
 						printUsage(); // invalid debug value given
 					}
 				}
-				System.out.println(tree.search(910));
+				System.out.println(tree.search(1));
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -254,7 +255,7 @@ public class GeneBankCreateBTree {
 		 * creating long value 
 		 */
 		
-	
+		
 		return stream;
 	}
 
