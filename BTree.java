@@ -70,7 +70,7 @@ public class BTree {
 			}
 		}
 		//Moving the parent node child pointers to add the right node
-		for (int j = parentNode.getNumObjects(); j > index; j--) {
+		for (int j = parentNode.getNumObjects()+1; j > index; j--) {
 			parentNode.setChild(j+1, parentNode.getChild(j));
 		}
 		//Adds right node as child for parent node
@@ -83,10 +83,13 @@ public class BTree {
 		parentNode.setObject(index, newLeftNode.getObject(t));
 		for (int j = newLeftNode.getNumObjects(); j > t; j--) {
 			newLeftNode.removeObject(j);
-			if ( ! newLeftNode.getIsLeaf()) {
-					newLeftNode.removeChild(j);
-			}
 		}
+		
+		if (!newLeftNode.getIsLeaf()) {
+			for (int j = newLeftNode.getNumChldPtrs(); j >= t; j--) {
+						newLeftNode.removeChild(j);
+			}
+		}	
 		newLeftNode.removeObject(t);
 		//Updates all object counts for relevant nodes
 		parentNode.setNumObjects(1 + parentNode.getNumObjects());
@@ -101,8 +104,9 @@ public class BTree {
 	}
 	
 	public void insert(TreeObject input) throws Exception {
+	//	System.out.println(root.getNumObjects() + " " + root.getNumChldPtrs());
+	//	System.out.println(root.byteOffset);
 		BTreeNode tempRoot = root;
-		System.out.println(input.getFrequency());
 //		System.out.println(22);
 		if (root.getNumObjects() == maxLoad) { //When root node is full
 			BTreeNode newRoot = new BTreeNode(allocateNode(), maxLoad, raf);
@@ -122,22 +126,25 @@ public class BTree {
 		//Will recurse to traverse the tree until a leaf is reach for insertion 
 		if (ancestor.getIsLeaf()) {
 			//Iterates through node until the insert position is located
-			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue() ) {
+			while (i >= 1 && input.getValue() <= ancestor.getObject(i).getValue() ) {
 				
 				if (input.getValue() == ancestor.getObject(i).getValue()) {
 					ancestor = temp;
 					ancestor.getObject(i).incrFreq();
+					//System.out.println(ancestor.getObject(i).getFrequency());
 					done = true;
+					break;
 				}
 				else {
 					//Moves an object up one position with each interval
-					ancestor.setObject(i, ancestor.getObject(i));
+					ancestor.setObject(i+1, ancestor.getObject(i));
 				}
+				
 				i--;
 				
 			}
 			//Adds the input object to the vacant position
-			 if (done == false) {
+			 if (done == false) {//
 				ancestor.setObject(i+1, input);
 //				ancestor.setNumObjects(1 + ancestor.getNumObjects())
 			}
@@ -156,9 +163,9 @@ public class BTree {
 				}
 				i--;
 			}
-			if (i != ancestor.getNumObjects()) {
+			//if (i != ancestor.getNumObjects()) {
 				i++;
-			}
+			//}
 			
 			
 			if (done == false) {
@@ -202,9 +209,8 @@ public class BTree {
 	
 	private int searchTree(BTreeNode x, long k) {
 		try {
-			System.out.println(root.byteOffset);
 			int i = 1;
-			while (i < x.getNumObjects() && k > x.getObject(i).getValue()) {
+			while (i <= x.getNumObjects() && k > x.getObject(i).getValue()) {
 				i++;
 			}
 			if (i <= x.getNumObjects() && k == x.getObject(i).getValue()) {
