@@ -16,14 +16,15 @@ public class BTree {
 		this.t = t;
 		this.raf = raf;	
 		cursor = 0;
-		root = new BTreeNode(true, allocateNode(), maxLoad, raf);
+		maxLoad = (2*t)-1;
+		root = new BTreeNode(allocateNode(), maxLoad, raf);
 		BTreeNode x = root;
 		nodeOnMemory = x;
 		x.setIsLeaf(1);
 		x.setNumObjects(0);
 		x.diskWrite();
 		currentLoad = 0;
-		maxLoad = (2*t)-1;
+		
 	}
 	
 	
@@ -53,10 +54,10 @@ public class BTree {
 		
 		
 		//Creates a new node that will house the data for the right child after the split
-		BTreeNode newRightNode = new BTreeNode(parentNode.getChild(index).getIsLeaf(), allocateNode(), (2*t)-1, raf);
+		BTreeNode newRightNode = new BTreeNode(allocateNode(), (2*t)-1, raf);
 		
 		//Pulls the full child and stores 
-		BTreeNode newLeftNode = parentNode.getChild(index);
+		BTreeNode newLeftNode = parentNode.diskRead(index);
 		
 		//Puts objects from the full node to the right node 
 		for (int j = 1; j < t; j++) {
@@ -73,7 +74,7 @@ public class BTree {
 			parentNode.setChild(j+1, parentNode.getChild(j));
 		}
 		//Adds right node as child for parent node
-		parentNode.setChild(index + 1, newRightNode);
+		parentNode.setChild(index + 1, newRightNode.byteOffset);
 		//Now creating the space for the median object to move up
 		for (int j = parentNode.getNumObjects(); j >= index; j--) {
 			parentNode.setObject(j+1, parentNode.getObject(j));
@@ -104,8 +105,8 @@ public class BTree {
 		System.out.println(root.getNumObjects());
 //		System.out.println(22);
 		if (root.getNumObjects() == maxLoad) { //When root node is full
-			BTreeNode newRoot = new BTreeNode(false, allocateNode(), maxLoad, raf);
-			newRoot.setChild(1, tempRoot);
+			BTreeNode newRoot = new BTreeNode(allocateNode(), maxLoad, raf);
+			newRoot.setChild(1, tempRoot.byteOffset);
 			splitChild(newRoot, 1);
 			root = newRoot;
 			insertNonfull(newRoot, input);
@@ -116,19 +117,24 @@ public class BTree {
 	
 	private void insertNonfull(BTreeNode ancestor, TreeObject input) throws Exception {
 		boolean done = false;
+		BTreeNode temp = ancestor;
 		int i = ancestor.getNumObjects() ;
 		//Will recurse to traverse the tree until a leaf is reach for insertion 
 		if (ancestor.getIsLeaf()) {
 			//Iterates through node until the insert position is located
-			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue() ) {
+			while (i >= 1 && input.getValue() <= ancestor.getObject(i).getValue() ) {
 				//Moves an object up one position with each interval
 				ancestor.setObject(i+1, ancestor.getObject(i));
 				i--;
 			}
 			//Adds the input object to the vacant position
-			ancestor.setObject(i+1, input);
-//			ancestor.setNumObjects(1 + ancestor.getNumObjects());
-
+			if (input.getValue() == ancestor.getObject(i).getValue()) {
+				ancestor = temp;
+				ancestor.getObject(i).incrFreq();
+			} else {
+				ancestor.setObject(i+1, input);
+//				ancestor.setNumObjects(1 + ancestor.getNumObjects())
+			}
 			ancestor.diskWrite();
 			done = true;
 			
@@ -139,30 +145,37 @@ public class BTree {
 			}
 			i++;
 			
-
-			nodeOnMemory = ancestor.diskRead(i);
-			
-			
-			
-		
-			//Splits node if newly accessed node is full
-			if (nodeOnMemory.getNumObjects() == maxLoad) {
-				System.out.println(i);
-				System.out.println(nodeOnMemory.getNumObjects());
-				splitChild(ancestor, i);
+			if (input.getValue() == ancestor.getObject(i).getValue()) {
+				ancestor = temp;
+				ancestor.getObject(i).incrFreq();
+				ancestor.diskWrite();
+				done = true;
+			} else {
 				
-	
+			
 				nodeOnMemory = ancestor.diskRead(i);
 				
 				
-				//After the split will enter if input is larger than all objects in left node
-				if (input.getValue() > ancestor.getObject(i).getValue()) {
-					
-	
-					nodeOnMemory = ancestor.diskRead(i+1);
-				}
-			} 
+				
 			
+				//Splits node if newly accessed node is full
+				if (nodeOnMemory.getNumObjects() == maxLoad) {
+					System.out.println(i);
+					System.out.println(nodeOnMemory.getNumObjects());
+					splitChild(ancestor, i);
+					
+		
+					nodeOnMemory = ancestor.diskRead(i);
+					
+					
+					//After the split will enter if input is larger than all objects in left node
+					if (input.getValue() > ancestor.getObject(i).getValue()) {
+						
+		
+						nodeOnMemory = ancestor.diskRead(i+1);
+					}
+				} 
+			}
 			//If object fails to insert this will cause to run recursively until successful, the node given as a parameter must be saved to memory 
 			if (done == false) {
 				insertNonfull(nodeOnMemory, input);
