@@ -66,7 +66,7 @@ public class BTree {
 		if ( ! newLeftNode.getIsLeaf()) {
 			//now moving child pointers
 			for (int j = 1; j <= t; j++) {
-				newRightNode.setChild(j, newLeftNode.getChild(j + t));
+					newRightNode.setChild(j, newLeftNode.getChild(j + t));
 			}
 		}
 		//Moving the parent node child pointers to add the right node
@@ -84,7 +84,7 @@ public class BTree {
 		for (int j = newLeftNode.getNumObjects(); j > t; j--) {
 			newLeftNode.removeObject(j);
 			if ( ! newLeftNode.getIsLeaf()) {
-				newLeftNode.removeChild(j);
+					newLeftNode.removeChild(j);
 			}
 		}
 		newLeftNode.removeObject(t);
@@ -102,7 +102,7 @@ public class BTree {
 	
 	public void insert(TreeObject input) throws Exception {
 		BTreeNode tempRoot = root;
-		System.out.println(root.getNumObjects());
+		System.out.println(input.getFrequency());
 //		System.out.println(22);
 		if (root.getNumObjects() == maxLoad) { //When root node is full
 			BTreeNode newRoot = new BTreeNode(allocateNode(), maxLoad, raf);
@@ -118,20 +118,26 @@ public class BTree {
 	private void insertNonfull(BTreeNode ancestor, TreeObject input) throws Exception {
 		boolean done = false;
 		BTreeNode temp = ancestor;
-		int i = ancestor.getNumObjects() ;
+		int i = ancestor.getNumObjects();
 		//Will recurse to traverse the tree until a leaf is reach for insertion 
 		if (ancestor.getIsLeaf()) {
 			//Iterates through node until the insert position is located
-			while (i >= 1 && input.getValue() <= ancestor.getObject(i).getValue() ) {
-				//Moves an object up one position with each interval
-				ancestor.setObject(i+1, ancestor.getObject(i));
+			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue() ) {
+				
+				if (input.getValue() == ancestor.getObject(i).getValue()) {
+					ancestor = temp;
+					ancestor.getObject(i).incrFreq();
+					done = true;
+				}
+				else {
+					//Moves an object up one position with each interval
+					ancestor.setObject(i, ancestor.getObject(i));
+				}
 				i--;
+				
 			}
 			//Adds the input object to the vacant position
-			if (input.getValue() == ancestor.getObject(i).getValue()) {
-				ancestor = temp;
-				ancestor.getObject(i).incrFreq();
-			} else {
+			 if (done == false) {
 				ancestor.setObject(i+1, input);
 //				ancestor.setNumObjects(1 + ancestor.getNumObjects())
 			}
@@ -141,16 +147,21 @@ public class BTree {
 		} else { //If relevant node is internal
 			//Iterates through the node until the relevant child node is located and stores it to memory, will recurse on that child
 			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue()) {
+				
+				if (input.getValue() == ancestor.getObject(i).getValue()) {
+					ancestor = temp;
+					ancestor.getObject(i).incrFreq();
+					ancestor.diskWrite();
+					done = true;
+				}
 				i--;
 			}
-			i++;
+			if (i != ancestor.getNumObjects()) {
+				i++;
+			}
 			
-			if (input.getValue() == ancestor.getObject(i).getValue()) {
-				ancestor = temp;
-				ancestor.getObject(i).incrFreq();
-				ancestor.diskWrite();
-				done = true;
-			} else {
+			
+			if (done == false) {
 				
 			
 				nodeOnMemory = ancestor.diskRead(i);
@@ -160,8 +171,8 @@ public class BTree {
 			
 				//Splits node if newly accessed node is full
 				if (nodeOnMemory.getNumObjects() == maxLoad) {
-					System.out.println(i);
-					System.out.println(nodeOnMemory.getNumObjects());
+				//	System.out.println(i);
+				//	System.out.println(nodeOnMemory.getNumObjects());
 					splitChild(ancestor, i);
 					
 		
@@ -180,6 +191,36 @@ public class BTree {
 			if (done == false) {
 				insertNonfull(nodeOnMemory, input);
 			}
+		}
+		
+		
+	}
+	
+	public int search(long k) {
+		return searchTree(root, k);
+	}
+	
+	private int searchTree(BTreeNode x, long k) {
+		try {
+			System.out.println(root.byteOffset);
+			int i = 1;
+			while (i < x.getNumObjects() && k > x.getObject(i).getValue()) {
+				i++;
+			}
+			if (i <= x.getNumObjects() && k == x.getObject(i).getValue()) {
+				return x.getObject(i).getFrequency();
+			}
+			else if (x.getIsLeaf()) {
+				return 0;
+			}
+			else {
+				BTreeNode y = x.diskRead(i);
+				return searchTree(y, k);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return 0;
 		}
 	}
 	
