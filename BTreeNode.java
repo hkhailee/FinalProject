@@ -10,7 +10,7 @@ public class BTreeNode {
 	private int parentPtr;
 	private boolean isLeaf;
 	private int numObjects;
-	private int byteOffset; //should point to the first byte of the node
+	int byteOffset; //should point to the first byte of the node
 	public int maxObjects;
 	private int maxPtrs;
 	private int nextOpenSpot;
@@ -85,7 +85,7 @@ public class BTreeNode {
 		else isLeaf = false;
 	}
 	public boolean getIsLeaf() {
-		if (children.size() <= 1) {
+		if (childPtrs.size() <= 1) {
 			return true;
 		}
 		else return false;
@@ -105,7 +105,6 @@ public class BTreeNode {
 	}
 	
 	public void removeChild(int index) {
-		children.remove(index);
 		childPtrs.remove(index);
 	}
 	
