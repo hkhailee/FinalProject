@@ -176,8 +176,9 @@ public class GeneBankCreateBTree {
 									// pass the object to the btree class\
 									
 									tree.insert(obj);
+								
 									System.out.println(sb.toString());
-									
+									System.out.println(stream);
 								}
 								
 								
@@ -191,7 +192,7 @@ public class GeneBankCreateBTree {
 					}
 //				scan.close();
 				System.out.println(lineCount);
-			
+				
 				
 
 				/*
@@ -208,12 +209,13 @@ public class GeneBankCreateBTree {
 						// DNA string: frequency. The dump file contains DNA string (corresponding to
 						// the key stored) and frequency in an inorder traversal. You can find a dump
 						// file
-						System.out.println(thisCache.toString());
+						//System.out.println(thisCache.toString());
 
 					} else {
 						printUsage(); // invalid debug value given
 					}
 				}
+				System.out.println(tree.search(910));
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -240,16 +242,18 @@ public class GeneBankCreateBTree {
 			} else if(subString.charAt(i) == 'g'|| subString.charAt(i) == 'G') {
 				bineString += "10";
 				continue;
-			}	
-			
-			
-			
+			}				
+		}
+		long stream = 0;
+		int factor = 1;
+		for (int i = bineString.length()-1; i >= 0; i--) {
+			stream += ((int) bineString.charAt(i) - 48) * factor;
+			factor = factor*2;
 		}
 		/*
 		 * creating long value 
 		 */
 		
-		long stream = Long.parseLong(bineString);
 	
 		return stream;
 	}
