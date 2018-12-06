@@ -1,143 +1,285 @@
-import java.io.BufferedWriter;
+package cs321_final;
+
 import java.io.File;
 import java.io.FileWriter;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
-/**
- * @author Marcus Henke This is the class for Cache objects. The cache object
- *         uses an ArrayList for storing objects, and the ArrayList has a
- *         maximum size. Any object can be stored in a Cache.
- * @param <T>
- */
-public class Cache<T> {
-	// Initialize instance variables
-	private int cacheSize;
-	private ArrayList<TreeObject> cacheList;
-	private ArrayList<TreeObject> printList;
-	private int numReferences;
-	private int numHits;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.RandomAccessFile;
+import java.util.Random;
 
-	/**
-	 * Constructor for the Cache object. Initializes all instance variables.
-	 * 
-	 * @param size, size of the cache
-	 */
-	public Cache(int size) {
-		cacheList = new ArrayList<TreeObject>();
-		cacheSize = size;
-		// numReferences = 0;
-		numHits = 0;
+public class BTree {
+
+	private int t; // this is the degree t of the BTree
+	private int maxLoad;
+	private int size; // the size (in nodes) of the BTree
+	private int rootPosition;
+	private BTreeNode root;
+	private int currentLoad;
+	int cursor; // byte position. always point to the end of the file
+	private BTreeNode nodeOnMemory;
+	private RandomAccessFile raf;
+	Boolean bool = false;
+
+	public BTree(int t, RandomAccessFile raf) throws Exception {
+		this.t = t;
+		this.raf = raf;
+		cursor = 0;
+		maxLoad = (2 * t) - 1;
+		root = new BTreeNode(allocateNode(), maxLoad, raf);
+		root.isLeaf = true;
+		BTreeNode x = root;
+		nodeOnMemory = x;
+		x.setIsLeaf(1);
+		x.setNumObjects(0);
+		x.diskWrite();
+		currentLoad = 0;
+
 	}
 
-	/**
-	 * adds object to the top of the Cache. If the Cache has reached its max size,
-	 * delete the object at the bottom of the Cache.
-	 * 
-	 * @param object, object to add to the Cache
-	 */
-	public void addObject(TreeObject DNAobject) {
-		if (cacheList.size() == cacheSize) {
-			removeObject();
+	private int allocateNode() throws Exception {
+		int x = cursor;
+		raf.seek(cursor); // Go to byte at offset position 5.
+		raf.writeInt(cursor);
+		raf.writeInt(0);
+		raf.writeInt(0);
+		cursor += 3 * 4;
+		// Initialize all pointers to -1
+		for (int i = 1; i <= (2 * t + 1); i++) {
+			raf.writeInt(-1);
+			cursor += 4;
 		}
-		cacheList.add(DNAobject);
-
+		// Initialize all TreeObject values
+		for (int i = 1; i <= (2 * t - 1); i++) {
+			raf.writeLong(-1);
+			raf.writeInt(0);
+			cursor += 12;
+		}
+		return x;
 	}
 
-	/**
-	 * Determines if a given object is already in the Cache
-	 * 
-	 * @param object, object to determine
-	 * @return true if the Cache contains the object
-	 * @return false if the Cache doesn't contain the object
-	 */
-	public boolean getObject(TreeObject n) {
-		// numReferences++;
-		// n.freq++;
-		for (TreeObject t : cacheList) {
-			if (t.getStream() == n.getStream()) {
-				//t.freq++;
-				return true;
+	private boolean canSplit(BTreeNode node, int index, TreeObject input) throws Exception {
+		BTreeNode tempNode = node.diskRead(index);
+		int obj = tempNode.getNumObjects();
+
+		for (int i = 1; i <= obj; i++) {
+			if (input.getValue() == tempNode.getObject(i).getValue()) {
+				tempNode.getObject(i).incrFreq();
+				tempNode.diskWrite();
+				return false;
 			}
 		}
-//		if (cacheList.contains(n)) {
-//			n.freq++;
-//			
-//			return true;
-//		}
-		return false;
+		return true;
 	}
-	
-	public int getFreq(int index) {
-		TreeObject node = cacheList.get(index);
-		if(getObject(node)) {
-			return node.freq;
+
+	// When a node has a full child at given index this method will split that child
+	// node
+	private void splitChild(BTreeNode parentNode, int index) throws Exception {
+		// Creates a new node that will house the data for the right child after the
+		// split
+		BTreeNode newRightNode = new BTreeNode(allocateNode(), maxLoad, raf);
+		// Pulls the full child and stores
+		BTreeNode newLeftNode = parentNode.diskRead(index);
+		newRightNode.isLeaf = parentNode.getIsLeaf();
+		// Puts objects from the full node to the right node
+		for (int j = 1; j < t; j++) {
+			newRightNode.setObject(j, newLeftNode.getObject(j + t));
 		}
-		else {
+		if (!newLeftNode.getIsLeaf()) {
+			// now moving child pointers
+			for (int j = 1; j <= t; j++) {
+				newRightNode.setChild(j, newLeftNode.getChild(j + t));
+			}
+		}
+		// Moving the parent node child pointers to add the right node
+		for (int j = parentNode.getNumObjects() + 1; j > index; j--) {
+			parentNode.setChild(j + 1, parentNode.getChild(j));
+		}
+		// Adds right node as child for parent node
+		parentNode.setChild(index + 1, newRightNode.byteOffset);
+		// Now creating the space for the median object to move up
+		for (int j = parentNode.getNumObjects(); j >= index; j--) {
+			parentNode.setObject(j + 1, parentNode.getObject(j));
+		}
+		// Moving the median object from the left node to the parent
+		parentNode.setObject(index, newLeftNode.getObject(t));
+		parentNode.setNumObjects(parentNode.getNumObjects() + 1);
+		for (int j = newLeftNode.getNumObjects(); j > t; j--) {
+			newLeftNode.removeObject(j);
+		}
+		if (!newLeftNode.getIsLeaf()) {
+			for (int j = newLeftNode.getNumChldPtrs(); j > t; j--) {
+				newLeftNode.removeChild(j);
+			}
+		}
+		newLeftNode.removeObject(t);
+
+		parentNode.setIsLeaf(0);
+		newRightNode.setNumObjects(t - 1);
+		newLeftNode.setNumObjects(t - 1);
+		newLeftNode.diskWrite();
+		newRightNode.diskWrite();
+		parentNode.diskWrite();
+
+	}
+
+	public void insert(TreeObject input) throws Exception {
+
+		if (input.getValue() == 3) {
+			int x = 0;
+		}
+		if (input.getValue() < 22) {
+			int x = 4;
+		}
+		BTreeNode tempRoot = root;
+
+		if (root.getNumObjects() == maxLoad) { // When root node is full
+			BTreeNode newRoot = new BTreeNode(allocateNode(), maxLoad, raf);
+			root = newRoot;
+			newRoot.isLeaf = false;
+			newRoot.setNumObjects(0);
+			newRoot.setChild(1, tempRoot.byteOffset);
+			if (!canSplit(newRoot, 1, input)) {
+				return;
+			}
+			splitChild(newRoot, 1);
+			insertNonfull(newRoot, input);
+		} else {
+			insertNonfull(root, input);
+		}
+	}
+
+	private void insertNonfull(BTreeNode ancestor, TreeObject input) throws Exception {
+//		boolean done = false;
+//		BTreeNode temp = ancestor;
+		int i = ancestor.getNumObjects();
+		for (int j = 1; j <= i; j++) {
+			if (input.getValue() == ancestor.getObject(j).getValue()) {
+				ancestor.getObject(j).incrFreq();
+				ancestor.diskWrite();
+				return;
+			}
+		}
+
+		// Will recurse to traverse the tree until a leaf is reach for insertion
+		if (ancestor.getIsLeaf()) {
+			// Iterates through node until the insert position is located
+			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue()) {
+				ancestor.setObject(i + 1, ancestor.getObject(i));
+				i--;
+			}
+
+			ancestor.setObject(i + 1, input);
+			ancestor.setNumObjects(ancestor.getNumObjects() + 1);
+			ancestor.diskWrite();
+
+		} else { // If relevant node is internal
+			// Iterates through the node until the relevant child node is located and stores
+			// it to memory, will recurse on that child
+			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue()) {
+				i--;
+			}
+			i++;
+			nodeOnMemory = ancestor.diskRead(i);
+
+			if (nodeOnMemory.getNumObjects() == maxLoad) {
+				if (!canSplit(ancestor, i, input)) {
+					return;
+				}
+				splitChild(ancestor, i);
+				nodeOnMemory = ancestor.diskRead(i);
+				// After the split will enter if input is larger than all objects in left node
+				if (input.getValue() > ancestor.getObject(i).getValue()) {
+					i++;
+					nodeOnMemory = ancestor.diskRead(i);
+				}
+			}
+			insertNonfull(nodeOnMemory, input);
+		}
+		// If object fails to insert this will cause to run recursively until
+		// successful, the node given as a parameter must be saved to memory
+	}
+
+	public int search(long k) {
+		return searchTree(root, k);
+	}
+
+	private int searchTree(BTreeNode x, long k) {
+		try {
+			int i = 1;
+			while (i <= x.getNumObjects() && k > x.getObject(i).getValue()) {
+				i++;
+			}
+			if (i <= x.getNumObjects() && k == x.getObject(i).getValue()) {
+				return x.getObject(i).getFrequency();
+			} else if (x.getIsLeaf()) {
+				return 0;
+			} else {
+				BTreeNode y = x.diskRead(i);
+				return searchTree(y, k);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 			return 0;
 		}
 	}
 
-	/**
-	 * Moves the given object to the top of the Cache
-	 * 
-	 * @param object, object to move
-	 */
-	public void moveToTop(TreeObject DNAobject) {
-		cacheList.remove(DNAobject);
-		cacheList.add(DNAobject);
-		DNAobject.incrFreq();
+	public void traverseTree(String test, int k) throws Exception {
+		
+		FileWriter fw = new FileWriter(new File(test+".btree.dump."+k));
+		treeTraverse(root, fw);
+		fw.close();
 	}
 
-	/**
-	 * Removes all objects from the Cache
-	 */
-	public void clearCache() {
-		cacheList.clear();
-	}
+	private void treeTraverse(BTreeNode rootTrav, FileWriter fw) throws Exception {
 
-	/**
-	 * Removes the object at the bottom of the Cache
-	 */
-	public void removeObject() {
-		cacheList.remove(cacheSize - 1);
-	}
+		int chld = rootTrav.getNumChldPtrs();
+		int obj = rootTrav.getNumObjects();
 
-	/**
-	 * @return numReferences, the Cache's number of references
-	 */
-	public int getReferences() {
-		return numReferences;
-	}
+		int n = 6;
 
-	/**
-	 * @return numHits, the Cache's number of hits
-	 */
-	public int getHits() {
-		return numHits;
-	}
-
-	public String toString() {
-		try {
-			String S = "";
-			TreeObject entry;
-			TreeObject entry2;
-			File file = new File("dump");
-			FileWriter rw = new FileWriter(file, true);
-			for (int i = 0; i < cacheList.size(); i++) {
-
-				entry = cacheList.get(i);
-				// entry2 = cacheList.get(i+1);
-				rw.write(entry.getValue() + ": " + entry.getFrequency() + "\n");
-				S += (entry.getValue() + ": " + entry.getFrequency() + "\n");
-
+		for (int i = 1; i <= chld; i++) {
+			treeTraverse(rootTrav.diskRead(i), fw);
+			if (obj >= i) {
+				String str = backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency(), n);
+				fw.write(str + "\n");
 			}
-			rw.close();
-			System.out.println(cacheList.size());
-			return S;
-		} catch (Exception e) {
 		}
-		return null;
+		if (rootTrav.getIsLeaf()) {
+			for (int j = 1; j <= obj; j++) {
+				String str = backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency(), n);
+				fw.write(str + "\n");
+			}
+		}
 
+	}
+
+	private String backToString(long stream, int freq, int strLen) {
+		String str = Long.toBinaryString(stream);
+		StringBuilder sb = new StringBuilder();
+		int x = Math.abs(str.length() - (2 * strLen));
+		for (int i = 0; i < x; i++) {
+			sb.append('0');
+		}
+		sb.append(str);
+		String val = sb.toString();
+		sb = new StringBuilder();
+		for (int i = 0; i < val.length(); i += 2) {
+			String substr = val.substring(i, i + 2);
+			if (substr.equals("00")) {
+				sb.append('a');
+			} else if (substr.equals("01")) {
+				sb.append('c');
+			} else if (substr.equals("10")) {
+				sb.append('g');
+			} else if (substr.equals("11")) {
+				sb.append('t');
+			}
+		}
+		sb.append(": " + freq);
+		return sb.toString();
 	}
 
 }
