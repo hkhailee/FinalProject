@@ -127,7 +127,7 @@ public class BTree {
 		int i = ancestor.getNumObjects();
 		
 		for (int j = 1; j <= i; j++) {
-			if (input.getValue() == ancestor.getObject(i).getValue()) {
+			if (input.getValue() == ancestor.getObject(j).getValue()) {
 				ancestor.getObject(j).incrFreq();
 				ancestor.diskWrite();
 				return;
@@ -196,6 +196,34 @@ public class BTree {
 		}
 	}
 	
+	public void treeTraverse(BTreeNode rootTrav) throws Exception {
+		
+		
+		int chld = rootTrav.getNumChldPtrs();
+		int obj = rootTrav.getNumObjects();
+		
+		for (int i = 1; i <= chld; i++) {
+			treeTraverse(rootTrav.diskRead(i));
+			if (obj >= i) {
+				backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency());
+				
+			}	
+		}
+		if (rootTrav.getIsLeaf()) {
+			for (int j = 1; j <= obj; j++) {
+				backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency());
+			}	
+		}
+		
+		
+		
+	}
+
+
+	private void backToString(long value, int frequency) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	
 	
