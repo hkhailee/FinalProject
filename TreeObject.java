@@ -1,9 +1,12 @@
+import java.util.Random;
+
 public class TreeObject implements Comparable<TreeObject> {
 
 	public long Stream;
 	public int freq;
 	private long Value;
 	public String seq;
+	int id;
 
 	public TreeObject(long stream) {
 		this.Stream = stream;
@@ -49,9 +52,14 @@ public class TreeObject implements Comparable<TreeObject> {
 
 		return freq;
 	}
-
+	public void incrFreq() {
+		freq++;
+	}
+	/**
+	 * @return the binary representation of the substring
+	 */
 	public String getObject() {
-
+		
 		return seq;
 	}
 
