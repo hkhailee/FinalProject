@@ -8,9 +8,9 @@ public class BTreeNode {
 	private List<TreeObject> objects;
 	private List<Integer> childPtrs;
 	private int parentPtr;
-	private boolean isLeaf;
+	boolean isLeaf;
 	private int numObjects;
-	private int byteOffset; //should point to the first byte of the node
+	int byteOffset; //should point to the first byte of the node
 	public int maxObjects;
 	private int maxPtrs;
 	private int nextOpenSpot;
@@ -30,6 +30,7 @@ public class BTreeNode {
 		parentPtr = 0;
 		children = new ArrayList<BTreeNode>();
 		children.add(null);
+		this.numObjects = 0;
 	}
 	
 	public void setParentPointer(int p) {
@@ -57,7 +58,10 @@ public class BTreeNode {
 	}
 	
 	public int getNumObjects() {
-		return objects.size()-1;
+//		if (numObjects > maxObjects) {
+//			this.numObjects = maxObjects;
+//		}
+		return this.numObjects;
 	}
 	
 	public int getNumChldPtrs() {
@@ -73,6 +77,10 @@ public class BTreeNode {
 		}
 	}
 	
+	public void addObject(int index, TreeObject object) {
+		objects.add(index, object);
+	}
+	
 	public TreeObject getObject(int index) {
 		TreeObject object = objects.get(index);
 		return object;
@@ -85,7 +93,7 @@ public class BTreeNode {
 		else isLeaf = false;
 	}
 	public boolean getIsLeaf() {
-		if (children.size() <= 1) {
+		if (childPtrs.size() == 1) {
 			return true;
 		}
 		else return false;
@@ -94,7 +102,7 @@ public class BTreeNode {
 		if (index < childPtrs.size()) {
 			childPtrs.set(index, n);
 		}
-		else {
+		else if (index == childPtrs.size()) {
 			childPtrs.add(n);
 		}
 	
@@ -105,7 +113,6 @@ public class BTreeNode {
 	}
 	
 	public void removeChild(int index) {
-		children.remove(index);
 		childPtrs.remove(index);
 	}
 	
@@ -114,9 +121,10 @@ public class BTreeNode {
 	}
 	
 	public void diskWrite() throws Exception {
+		
 	    raf.seek(byteOffset); // Go to byte at offset position 5.
 	    raf.writeInt(byteOffset);
-	    raf.writeInt(objects.size()-1);
+	    raf.writeInt(getNumObjects());
 	    if (isLeaf) {
 	    	raf.writeInt(1);
 	    }
@@ -125,14 +133,18 @@ public class BTreeNode {
 	    int i, j;
 	    //Write all pointers. Unused pointers will be written as 0.
 	    for (i = 1; i < childPtrs.size(); i++) {
-	    	raf.writeInt(childPtrs.get(i));
+	    	if (i <= maxObjects+1) {
+	    		raf.writeInt(childPtrs.get(i));
+	    	}
 	    }
 	    for (j = i; j <= maxPtrs; j++) {
 	    	raf.writeInt(-1);
 	    }
-	    for (i = 1; i < objects.size(); i++) {
-	    	raf.writeLong(objects.get(i).getStream());
-	    	raf.writeInt(objects.get(i).getFrequency());
+	    for (i = 1; i <= numObjects; i++) {
+	    	if (i <= maxObjects) {
+	    		raf.writeLong(objects.get(i).getStream());
+		    	raf.writeInt(objects.get(i).getFrequency());
+	    	}
 	    }
 	    for (j = i; j <= maxObjects; j++) {
 	    	raf.writeLong(-1);
@@ -178,41 +190,6 @@ public class BTreeNode {
 	    }
 	    newNode.setObjects(treeObjs);
 	    List<BTreeNode> allChildren = new ArrayList<BTreeNode>();
-	    return newNode;
-	}
-	
-	
-	private BTreeNode diskReadChildren(int bytePos) throws Exception {
-		BTreeNode newNode = new BTreeNode(bytePos, maxObjects, raf);
-		System.out.println(bytePos);
-	    raf.seek(bytePos);
-	    raf.readInt();
-	    newNode.setNumObjects(raf.readInt());
-	    newNode.setIsLeaf(raf.readInt());
-	    newNode.setParentPointer(raf.readInt());
-	    
-	    //set child pointers
-	    List<Integer> ptrs = new ArrayList<Integer>();
-	    ptrs.add(-1);
-	    for (int i = 0; i < maxPtrs; i++) {
-	    	int x = raf.readInt();
-	    	if (x != -1) {
-	    		ptrs.add(x);
-	    	}
-	    }
-	    newNode.setChildPointers(ptrs);
-	    
-	    //set tree objects
-	    List<TreeObject> treeObjs = new ArrayList<TreeObject>();
-	    for (int i = 0; i < maxObjects; i++) {
-	    	long x = raf.readLong();
-	    	int y = raf.readInt();
-	    	treeObjs.add(new TreeObject(-1, -1));
-	    	if (x != -1) {
-	    		treeObjs.add(new TreeObject(x, y));
-	    	}
-	    }
-	    newNode.setObjects(treeObjs);
 	    return newNode;
 	}
 }
