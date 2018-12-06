@@ -85,7 +85,7 @@ public class BTree {
 		}
 //		
 		if (!newLeftNode.getIsLeaf()) {
-			for (int j = newLeftNode.getNumChldPtrs(); j >= t; j--) {
+			for (int j = newLeftNode.getNumChldPtrs(); j > t; j--) {
 						newLeftNode.removeChild(j);
 			}
 		}	
