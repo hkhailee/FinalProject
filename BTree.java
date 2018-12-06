@@ -125,6 +125,17 @@ public class BTree {
 //		boolean done = false;
 //		BTreeNode temp = ancestor;
 		int i = ancestor.getNumObjects();
+		
+		for (int j = 1; j <= i; j++) {
+			if (input.getValue() == ancestor.getObject(i).getValue()) {
+				ancestor.getObject(j).incrFreq();
+				ancestor.diskWrite();
+				return;
+			}
+		}
+		
+		
+		
 		//Will recurse to traverse the tree until a leaf is reach for insertion 
 		if (ancestor.getIsLeaf()) {
 			//Iterates through node until the insert position is located
@@ -132,6 +143,7 @@ public class BTree {
 					ancestor.setObject(i+1, ancestor.getObject(i));
 					i--;		
 			}
+			
 			ancestor.setObject(i+1, input);
 			ancestor.setNumObjects(ancestor.getNumObjects()+1);
 			ancestor.diskWrite();
