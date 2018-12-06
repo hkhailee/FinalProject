@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class BTree {
@@ -9,10 +11,12 @@ public class BTree {
 	private int rootPosition;
 	private BTreeNode root;
 	private int currentLoad;
+	private int strLen;
 	int cursor; //byte position. always point to the end of the file
 	private BTreeNode nodeOnMemory;
 	private RandomAccessFile raf;
-	public BTree(int t, RandomAccessFile raf) throws Exception {
+	public BTree(int t, RandomAccessFile raf, int strLen) throws Exception {
+		this.strLen = strLen;
 		this.t = t;
 		this.raf = raf;	
 		cursor = 0;
@@ -196,34 +200,64 @@ public class BTree {
 		}
 	}
 	
-	public void treeTraverse(BTreeNode rootTrav) throws Exception {
-		
+	public void traverseTree() throws Exception {
+		FileWriter fw = new FileWriter(new File("test"), true);
+		treeTraverse(root, fw);
+		fw.close();
+	}
+	
+	private void treeTraverse(BTreeNode rootTrav, FileWriter fw) throws Exception {
 		
 		int chld = rootTrav.getNumChldPtrs();
 		int obj = rootTrav.getNumObjects();
 		
 		for (int i = 1; i <= chld; i++) {
-			treeTraverse(rootTrav.diskRead(i));
+			treeTraverse(rootTrav.diskRead(i), fw);
 			if (obj >= i) {
-				backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency());
-				
+				String str = backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency());
+				fw.write(str + "\n");
 			}	
 		}
 		if (rootTrav.getIsLeaf()) {
 			for (int j = 1; j <= obj; j++) {
-				backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency());
+				String str = backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency());
+				fw.write(str + "\n");
 			}	
 		}
 		
 		
 		
+}
+	
+	private String backToString(long stream, int freq) {
+		String str = Long.toBinaryString(stream);
+		StringBuilder sb = new StringBuilder();
+		int x = Math.abs(str.length()-(2*strLen));
+		for (int i = 0; i < x; i++) {
+			sb.append('0');
+		}
+		sb.append(str);
+		String val = sb.toString();
+		sb = new StringBuilder();
+		for (int i = 0; i < val.length(); i+=2) {
+			String substr = val.substring(i, i+2);
+			if (substr.equals("00")) {
+				sb.append('a');
+			}
+			else if(substr.equals("01")) {
+				sb.append('c');
+			}
+			else if(substr.equals("10")) {
+				sb.append('g');
+			}
+			else if(substr.equals("11")) {
+				sb.append('t');
+			}
+		}
+		sb.append(": " + freq);
+		return sb.toString();
 	}
-
-
-	private void backToString(long value, int frequency) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 	
 	
 	
