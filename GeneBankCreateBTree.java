@@ -114,14 +114,15 @@ public class GeneBankCreateBTree {
 				BufferedReader input = new BufferedReader(new FileReader(file1)); 
 				String lineToken;
 				
-				while ((lineToken = input.readLine()) != null && !lineToken.isEmpty())  {
+				while ((lineToken = input.readLine()) != null)  {
 //					String lineToken = scan.nextLine();
 					Scanner lineScan = new Scanner(lineToken);
 //					System.out.println(lineToken);
 
 					String str = lineToken.replaceAll("\\s", "");
+					
 					if (str.equals("ORIGIN")) {
-						System.out.println(1);
+//						System.out.println(1);
 						foundStart = true;
 						System.out.println("foundStart: " + foundStart);
 
@@ -134,13 +135,13 @@ public class GeneBankCreateBTree {
 
 					} else if (foundStart == true) {
 						lineCount++;
-						for (int i =0; i < lineToken.length(); i++) {
-							char token = lineToken.charAt(i);
+						for (int i =0; i < str.length(); i++) {
+							char token = str.charAt(i);
 							
 							if (token == 'n' || token == 'N') {
 //								bitNum = bitNum - subString.length();
 								sb = new StringBuilder();
-								count = 0;
+//								count = 0;
 							} else if (token == 'a' || token == 't' || token == 'c' || token == 'g' || token == 'A' || token == 'T' || token == 'C' || token == 'G') {
 								
 								sb.append(token);
@@ -176,10 +177,12 @@ public class GeneBankCreateBTree {
 									// pass the object to the btree class\
 									
 									tree.insert(obj);
-								
-								//	System.out.println(obj.freq);
+									obj = new TreeObject(stream);
 									System.out.println(sb.toString());
-								//	System.out.println(stream);
+									
+									System.out.println(obj.getFrequency());
+									System.out.println(stream);
+									
 								}
 								
 								
@@ -216,7 +219,7 @@ public class GeneBankCreateBTree {
 						printUsage(); // invalid debug value given
 					}
 				}
-				System.out.println(tree.search(1));
+				System.out.println(tree.search(1875));
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -255,7 +258,7 @@ public class GeneBankCreateBTree {
 		 * creating long value 
 		 */
 		
-		
+	
 		return stream;
 	}
 
