@@ -1,7 +1,7 @@
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Random;
 
 public class BTree {
 
@@ -11,12 +11,11 @@ public class BTree {
 	private int rootPosition;
 	private BTreeNode root;
 	private int currentLoad;
-	private int strLen;
 	int cursor; //byte position. always point to the end of the file
 	private BTreeNode nodeOnMemory;
 	private RandomAccessFile raf;
-	public BTree(int t, RandomAccessFile raf, int strLen) throws Exception {
-		this.strLen = strLen;
+	Boolean bool = false;
+	public BTree(int t, RandomAccessFile raf) throws Exception {
 		this.t = t;
 		this.raf = raf;	
 		cursor = 0;
@@ -52,6 +51,19 @@ public class BTree {
 	    	cursor += 12;
 	    }
 	    return x;
+	}
+	private boolean canSplit(BTreeNode node, int index, TreeObject input) throws Exception {
+		BTreeNode tempNode = node.diskRead(index);
+		int obj = tempNode.getNumObjects();
+		
+		for (int i = 1; i <= obj; i ++) {
+			if (input.getValue() == tempNode.getObject(i).getValue()) {
+				tempNode.getObject(i).incrFreq();
+				tempNode.diskWrite();
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	// When a node has a full child at given index this method will split that child node
@@ -110,6 +122,12 @@ public class BTree {
 	public void insert(TreeObject input) throws Exception {
 	//	System.out.println(root.getNumObjects() + " " + root.getNumChldPtrs());
 	//	System.out.println(root.byteOffset);
+		if (input.getValue() == 3) {
+			int x = 0;
+		}
+		if (input.getValue() < 22) {
+			 int x = 4;
+		}
 		BTreeNode tempRoot = root;
 //		System.out.println(22);
 		if (root.getNumObjects() == maxLoad) { //When root node is full
@@ -118,10 +136,13 @@ public class BTree {
 			newRoot.isLeaf = false;
 			newRoot.setNumObjects(0);
 			newRoot.setChild(1, tempRoot.byteOffset);
-			splitChild(newRoot, 1);
-			insertNonfull(newRoot, input);
+			if (!canSplit(newRoot, 1, input) ) {
+				return;
+			}
+				splitChild(newRoot, 1);
+				insertNonfull(newRoot, input);
 		} else {
-			insertNonfull (tempRoot, input);
+			insertNonfull (root, input);
 		}
 	}
 	
@@ -129,7 +150,6 @@ public class BTree {
 //		boolean done = false;
 //		BTreeNode temp = ancestor;
 		int i = ancestor.getNumObjects();
-		
 		for (int j = 1; j <= i; j++) {
 			if (input.getValue() == ancestor.getObject(j).getValue()) {
 				ancestor.getObject(j).incrFreq();
@@ -161,11 +181,15 @@ public class BTree {
 				nodeOnMemory = ancestor.diskRead(i);
 
 				if (nodeOnMemory.getNumObjects() == maxLoad) {
+					if (!canSplit(ancestor, i, input)) {
+						return;
+					}
 					splitChild(ancestor, i);
 					nodeOnMemory = ancestor.diskRead(i);
 					//After the split will enter if input is larger than all objects in left node
 					if (input.getValue() > ancestor.getObject(i).getValue()) {
 						i++;
+						nodeOnMemory = ancestor.diskRead(i);
 					}
 				} 
 				insertNonfull(nodeOnMemory, input);
@@ -201,7 +225,7 @@ public class BTree {
 	}
 	
 	public void traverseTree() throws Exception {
-		FileWriter fw = new FileWriter(new File("test"), true);
+		FileWriter fw = new FileWriter(new File("test"));
 		treeTraverse(root, fw);
 		fw.close();
 	}
@@ -211,25 +235,27 @@ public class BTree {
 		int chld = rootTrav.getNumChldPtrs();
 		int obj = rootTrav.getNumObjects();
 		
+		int n = 6;
+		
 		for (int i = 1; i <= chld; i++) {
 			treeTraverse(rootTrav.diskRead(i), fw);
 			if (obj >= i) {
-				String str = backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency());
+				String str = backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency(), n);
 				fw.write(str + "\n");
 			}	
 		}
 		if (rootTrav.getIsLeaf()) {
 			for (int j = 1; j <= obj; j++) {
-				String str = backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency());
+				String str = backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency(), n);
 				fw.write(str + "\n");
 			}	
 		}
 		
 		
 		
-}
+	}
 	
-	private String backToString(long stream, int freq) {
+	private String backToString(long stream, int freq, int strLen) {
 		String str = Long.toBinaryString(stream);
 		StringBuilder sb = new StringBuilder();
 		int x = Math.abs(str.length()-(2*strLen));
@@ -257,7 +283,6 @@ public class BTree {
 		sb.append(": " + freq);
 		return sb.toString();
 	}
-	
 	
 	
 	
