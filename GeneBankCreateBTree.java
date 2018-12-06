@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -12,7 +13,7 @@ public class GeneBankCreateBTree {
 	static int cacheSize;
 	static int subSize = 0; // sequence length
 	static int degree = 0; // degree of tree
-	static boolean cacheInitialized = false;
+	static boolean cacheInitialized = true;
 	static File file;
 	static File dump;
 	/**
@@ -39,7 +40,7 @@ public class GeneBankCreateBTree {
 
 				if (Integer.parseInt(args[0]) == 0 || Integer.parseInt(args[0]) == 1) {
 					if (Integer.parseInt(args[0]) == 1) {
-						cacheInitialized = true;
+
 						cacheSize = Integer.parseInt(args[4]); // cache size should never change
 						thisCache = new Cache<TreeObject>(cacheSize); // uses optional value of cache size
 
@@ -72,7 +73,9 @@ public class GeneBankCreateBTree {
 				tree = new BTree(degree, raf);
 				
 				
-				
+				if (Integer.parseInt(args[0]) == 1) {
+					cacheInitialized = true;
+				}
 
 				/*
 				 * checks to see if k is within range
@@ -216,7 +219,7 @@ public class GeneBankCreateBTree {
 						printUsage(); // invalid debug value given
 					}
 				}
-				System.out.println(tree.search(1875));
+				System.out.println(tree.search(0));
 
 			} catch (Exception e) {
 				e.printStackTrace();
