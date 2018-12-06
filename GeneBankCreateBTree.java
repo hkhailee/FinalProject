@@ -1,274 +1,285 @@
 
-import java.io.BufferedReader;
+
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
+import java.io.File;
 import java.io.FileWriter;
 import java.io.RandomAccessFile;
-import java.util.Scanner;
+import java.util.Random;
 
-public class GeneBankCreateBTree {
+public class BTree {
 
-	static Cache<TreeObject> thisCache = null;
-	static BTree tree;
-	static int cacheSize;
-	static int subSize = 0; // sequence length
-	static int degree = 0; // degree of tree
-	static boolean cacheInitialized = true;
-	static File file;
-	static File dump;
-	/**
-	 * @param args
-	 */
-	/**
-	 * @param args
-	 */
-	public static void main(String args[]) {
-		
-		
-		
+	private int t; // this is the degree t of the BTree
+	private int maxLoad;
+	private int size; // the size (in nodes) of the BTree
+	private int rootPosition;
+	private BTreeNode root;
+	private int currentLoad;
+	int cursor; // byte position. always point to the end of the file
+	private BTreeNode nodeOnMemory;
+	private RandomAccessFile raf;
+	Boolean bool = false;
 
+	public BTree(int t, RandomAccessFile raf) throws Exception {
+		this.t = t;
+		this.raf = raf;
+		cursor = 0;
+		maxLoad = (2 * t) - 1;
+		root = new BTreeNode(allocateNode(), maxLoad, raf);
+		root.isLeaf = true;
+		BTreeNode x = root;
+		nodeOnMemory = x;
+		x.setIsLeaf(1);
+		x.setNumObjects(0);
+		x.diskWrite();
+		currentLoad = 0;
+
+	}
+
+	private int allocateNode() throws Exception {
+		int x = cursor;
+		raf.seek(cursor); // Go to byte at offset position 5.
+		raf.writeInt(cursor);
+		raf.writeInt(0);
+		raf.writeInt(0);
+		cursor += 3 * 4;
+		// Initialize all pointers to -1
+		for (int i = 1; i <= (2 * t + 1); i++) {
+			raf.writeInt(-1);
+			cursor += 4;
+		}
+		// Initialize all TreeObject values
+		for (int i = 1; i <= (2 * t - 1); i++) {
+			raf.writeLong(-1);
+			raf.writeInt(0);
+			cursor += 12;
+		}
+		return x;
+	}
+
+	private boolean canSplit(BTreeNode node, int index, TreeObject input) throws Exception {
+		BTreeNode tempNode = node.diskRead(index);
+		int obj = tempNode.getNumObjects();
+
+		for (int i = 1; i <= obj; i++) {
+			if (input.getValue() == tempNode.getObject(i).getValue()) {
+				tempNode.getObject(i).incrFreq();
+				tempNode.diskWrite();
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// When a node has a full child at given index this method will split that child
+	// node
+	private void splitChild(BTreeNode parentNode, int index) throws Exception {
+		// Creates a new node that will house the data for the right child after the
+		// split
+		BTreeNode newRightNode = new BTreeNode(allocateNode(), maxLoad, raf);
+		// Pulls the full child and stores
+		BTreeNode newLeftNode = parentNode.diskRead(index);
+		newRightNode.isLeaf = parentNode.getIsLeaf();
+		// Puts objects from the full node to the right node
+		for (int j = 1; j < t; j++) {
+			newRightNode.setObject(j, newLeftNode.getObject(j + t));
+		}
+		if (!newLeftNode.getIsLeaf()) {
+			// now moving child pointers
+			for (int j = 1; j <= t; j++) {
+				newRightNode.setChild(j, newLeftNode.getChild(j + t));
+			}
+		}
+		// Moving the parent node child pointers to add the right node
+		for (int j = parentNode.getNumObjects() + 1; j > index; j--) {
+			parentNode.setChild(j + 1, parentNode.getChild(j));
+		}
+		// Adds right node as child for parent node
+		parentNode.setChild(index + 1, newRightNode.byteOffset);
+		// Now creating the space for the median object to move up
+		for (int j = parentNode.getNumObjects(); j >= index; j--) {
+			parentNode.setObject(j + 1, parentNode.getObject(j));
+		}
+		// Moving the median object from the left node to the parent
+		parentNode.setObject(index, newLeftNode.getObject(t));
+		parentNode.setNumObjects(parentNode.getNumObjects() + 1);
+		for (int j = newLeftNode.getNumObjects(); j > t; j--) {
+			newLeftNode.removeObject(j);
+		}
+		if (!newLeftNode.getIsLeaf()) {
+			for (int j = newLeftNode.getNumChldPtrs(); j > t; j--) {
+				newLeftNode.removeChild(j);
+			}
+		}
+		newLeftNode.removeObject(t);
+
+		parentNode.setIsLeaf(0);
+		newRightNode.setNumObjects(t - 1);
+		newLeftNode.setNumObjects(t - 1);
+		newLeftNode.diskWrite();
+		newRightNode.diskWrite();
+		parentNode.diskWrite();
+
+	}
+
+	public void insert(TreeObject input) throws Exception {
+
+		if (input.getValue() == 3) {
+			int x = 0;
+		}
+		if (input.getValue() < 22) {
+			int x = 4;
+		}
+		BTreeNode tempRoot = root;
+
+		if (root.getNumObjects() == maxLoad) { // When root node is full
+			BTreeNode newRoot = new BTreeNode(allocateNode(), maxLoad, raf);
+			root = newRoot;
+			newRoot.isLeaf = false;
+			newRoot.setNumObjects(0);
+			newRoot.setChild(1, tempRoot.byteOffset);
+			if (!canSplit(newRoot, 1, input)) {
+				return;
+			}
+			splitChild(newRoot, 1);
+			insertNonfull(newRoot, input);
+		} else {
+			insertNonfull(root, input);
+		}
+	}
+
+	private void insertNonfull(BTreeNode ancestor, TreeObject input) throws Exception {
+//		boolean done = false;
+//		BTreeNode temp = ancestor;
+		int i = ancestor.getNumObjects();
+		for (int j = 1; j <= i; j++) {
+			if (input.getValue() == ancestor.getObject(j).getValue()) {
+				ancestor.getObject(j).incrFreq();
+				ancestor.diskWrite();
+				return;
+			}
+		}
+
+		// Will recurse to traverse the tree until a leaf is reach for insertion
+		if (ancestor.getIsLeaf()) {
+			// Iterates through node until the insert position is located
+			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue()) {
+				ancestor.setObject(i + 1, ancestor.getObject(i));
+				i--;
+			}
+
+			ancestor.setObject(i + 1, input);
+			ancestor.setNumObjects(ancestor.getNumObjects() + 1);
+			ancestor.diskWrite();
+
+		} else { // If relevant node is internal
+			// Iterates through the node until the relevant child node is located and stores
+			// it to memory, will recurse on that child
+			while (i >= 1 && input.getValue() < ancestor.getObject(i).getValue()) {
+				i--;
+			}
+			i++;
+			nodeOnMemory = ancestor.diskRead(i);
+
+			if (nodeOnMemory.getNumObjects() == maxLoad) {
+				if (!canSplit(ancestor, i, input)) {
+					return;
+				}
+				splitChild(ancestor, i);
+				nodeOnMemory = ancestor.diskRead(i);
+				// After the split will enter if input is larger than all objects in left node
+				if (input.getValue() > ancestor.getObject(i).getValue()) {
+					i++;
+					nodeOnMemory = ancestor.diskRead(i);
+				}
+			}
+			insertNonfull(nodeOnMemory, input);
+		}
+		// If object fails to insert this will cause to run recursively until
+		// successful, the node given as a parameter must be saved to memory
+	}
+
+	public int search(long k) {
+		return searchTree(root, k);
+	}
+
+	private int searchTree(BTreeNode x, long k) {
 		try {
-
-			// Checks to see if the correct amount of parameters were presented 
-			if (args.length < 4) {
-				printUsage();
-			}	
-
-				/*
-				 * if args 0 is 1 then use cache else no cache uses args 4 to get cache size
-				 */
-
-				if (Integer.parseInt(args[0]) == 0 || Integer.parseInt(args[0]) == 1) {
-					if (Integer.parseInt(args[0]) == 1) {
-
-						cacheSize = Integer.parseInt(args[4]); // cache size should never change
-						thisCache = new Cache<TreeObject>(cacheSize); // uses optional value of cache size
-
-					}
-				} else {
-					System.out.println(Integer.parseInt(args[0]));
-					throw new Exception(); // invalid cache value given
-				}
-
-				// if degree is 0 then find optimal degree and use that
-				if (Integer.parseInt(args[1]) == 0) {
-					
-					// ((2t-1)application object size) + ((2t+1)pointer object size) + (BtreeNode
-					// metadata size) <= 4096
-
-				} else {
-					degree = Integer.parseInt(args[1]); // takes in degree t
-				}
-				file = new File("dump2"); // takes in file name
-
-//				dump = new File("dump");
-//				FileWriter write = new FileWriter(dump);
-//				subSize = Integer.parseInt(args[3]);
-//				write.write("BTree Data: ");
-				/*
-				 * creating btree
-				 */
-				
-				RandomAccessFile raf = new RandomAccessFile(file, "rw");
-				tree = new BTree(degree, raf);
-				
-				
-				if (Integer.parseInt(args[0]) == 1) {
-					cacheInitialized = true;
-				}
-
-				/*
-				 * checks to see if k is within range
-				 */
-
-				if (Integer.parseInt(args[3]) >= 1 || Integer.parseInt(args[3]) <= 31) {
-					
-					subSize = Integer.parseInt(args[3]); // Substring length
-					System.out.println(subSize);
-				} else {
-
-					System.out.println(Integer.parseInt(args[3]));
-					printUsage();
-
-				}
-
-				/*
-				 * scan a given kgb file and then send the corresponding sequence string to the
-				 * btree class
-				 * 
-				 * also will potentially add the value to cache
-				 */
-				boolean foundStart = false;
-				int bitNum = 1;
-//				String bineString = ""; 
-				int lineCount= 0;
-				String subString = "";
-				File file1 = new File(args[2]);
-//				Scanner scan = new Scanner(file1);
-				TreeObject obj;
-				System.out.println(args[2]);
-				int count = 0;
-//				System.out.println(scan.nextLine());
-				StringBuilder sb = new StringBuilder();
-				
-				BufferedReader input = new BufferedReader(new FileReader(file1)); 
-				String lineToken;
-				
-				while ((lineToken = input.readLine()) != null)  {
-//					String lineToken = scan.nextLine();
-					Scanner lineScan = new Scanner(lineToken);
-//					System.out.println(lineToken);
-
-					String str2 = lineToken.replaceAll("\\s", "");
-					String str = str2.replaceAll("\\d", "");
-					if (str.equals("ORIGIN")) {
-//						System.out.println(1);
-						foundStart = true;
-						System.out.println("foundStart: " + foundStart);
-
-					} else if (lineToken.equals("//")) {
-						foundStart = false;
-
-						bitNum = bitNum - subString.length();
-						sb = new StringBuilder();
-						System.out.println("foundStart: " + foundStart);
-
-					} else if (foundStart == true) {
-						lineCount++;
-						for (int i =0; i < str.length(); i++) {
-							char token = str.charAt(i);
-							
-							if (token == 'n' || token == 'N') {
-//								bitNum = bitNum - subString.length();
-								sb = new StringBuilder();
-//								count = 0;
-							} else if (token == 'a' || token == 't' || token == 'c' || token == 'g' || token == 'A' || token == 'T' || token == 'C' || token == 'G') {
-								
-								sb.append(Character.toLowerCase(token));
-								count++;
-								bitNum++;
-//								Possibly make a method everytime the length of the sub string is reached
-								
-							}
-							
-							if (sb.length() > subSize) {
-								String st = sb.toString();
-								sb = new StringBuilder();
-								sb.append(st.substring(1,subSize +1));
-							}
-//						index	System.out.println(subString);
-							if (subSize == sb.length()) {
-								long stream = toLong(sb.toString());
-								
-								/*
-								 * if the cache is initialized then it will add the object to the cache
-								 */
-								if (cacheInitialized) {
-									
-									obj = new TreeObject(stream);
-
-									if (thisCache.getObject(obj) == false) {
-
-										thisCache.addObject(obj);
-									} else {
-										thisCache.moveToTop(obj);
-									}
-									
-									// pass the object to the btree class\
-									tree.insert(obj);
-									System.out.println(sb.toString());
-									System.out.println(tree.search(28));
-									obj = new TreeObject(stream);
-									
-//									System.out.println(obj.getFrequency());
-//									System.out.println(stream);
-									
-								}
-								
-								
-							}
-										subString = "";
-									
-							
-							}
-						
-						
-							
-						}
-					lineScan.close();
-					}
-//				scan.close();
-				System.out.println(lineCount);
-				
-				
-
-				/*
-				 * debugging level
-				 */
-
-				if (args.length == 6) {
-					if (Integer.parseInt(args[5]) == 0) {
-						// Any diagnostic messages, help and status messages must be be printed on
-						// standard error stream
-					} else if (Integer.parseInt(args[5]) == 1) {
-						// The program writes a text file named dump, that has the following line
-						// format:
-						// DNA string: frequency. The dump file contains DNA string (corresponding to
-						// the key stored) and frequency in an inorder traversal. You can find a dump
-						// file
-						//System.out.println(thisCache.toString());
-
-					} else {
-						printUsage(); // invalid debug value given
-					}
-				}
-				System.out.println(tree.search(0));
-				tree.traverseTree();
-
-			} catch (Exception e) {
-				e.printStackTrace();
-
-				System.out.println(
-					"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
+			int i = 1;
+			while (i <= x.getNumObjects() && k > x.getObject(i).getValue()) {
+				i++;
+			}
+			if (i <= x.getNumObjects() && k == x.getObject(i).getValue()) {
+				return x.getObject(i).getFrequency();
+			} else if (x.getIsLeaf()) {
+				return 0;
+			} else {
+				BTreeNode y = x.diskRead(i);
+				return searchTree(y, k);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
 		}
 	}
 
-	private static long toLong(String subString) {
+	public void traverseTree(String test, int k) throws Exception {
 		
-		String bineString = "";
-		for (int i = 0 ; i < subSize ; i++) {
-			
-			if(subString.charAt(i) == 'a'||subString.charAt(i) == 'A') {
-				bineString += "00";
-				continue;
-			} else if(subString.charAt(i) == 't'|| subString.charAt(i) == 'T') {
-				bineString += "11";
-				continue;
-			} else if(subString.charAt(i) == 'c'|| subString.charAt(i) == 'C') {
-				bineString += "01";
-				continue;
-			} else if(subString.charAt(i) == 'g'|| subString.charAt(i) == 'G') {
-				bineString += "10";
-				continue;
-			}				
-		}
-		long stream = 0;
-		int factor = 1;
-		for (int i = bineString.length()-1; i >= 0; i--) {
-			stream += ((int) bineString.charAt(i) - 48) * factor;
-			factor = factor*2;
-		}
-		/*
-		 * creating long value 
-		 */
-		
-	
-		return stream;
+		FileWriter fw = new FileWriter(new File(test+".btree.dump."+k));
+		treeTraverse(root, fw);
+		fw.close();
 	}
 
-	private static void printUsage() {
-		System.out.println("Your input does not fit the parameters domain");
-		
+	private void treeTraverse(BTreeNode rootTrav, FileWriter fw) throws Exception {
+
+		int chld = rootTrav.getNumChldPtrs();
+		int obj = rootTrav.getNumObjects();
+
+		int n = 6;
+
+		for (int i = 1; i <= chld; i++) {
+			treeTraverse(rootTrav.diskRead(i), fw);
+			if (obj >= i) {
+				String str = backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency(), n);
+				fw.write(str + "\n");
+			}
+		}
+		if (rootTrav.getIsLeaf()) {
+			for (int j = 1; j <= obj; j++) {
+				String str = backToString(rootTrav.getObject(j).getValue(), rootTrav.getObject(j).getFrequency(), n);
+				fw.write(str + "\n");
+			}
+		}
+
+	}
+
+	private String backToString(long stream, int freq, int strLen) {
+		String str = Long.toBinaryString(stream);
+		StringBuilder sb = new StringBuilder();
+		int x = Math.abs(str.length() - (2 * strLen));
+		for (int i = 0; i < x; i++) {
+			sb.append('0');
+		}
+		sb.append(str);
+		String val = sb.toString();
+		sb = new StringBuilder();
+		for (int i = 0; i < val.length(); i += 2) {
+			String substr = val.substring(i, i + 2);
+			if (substr.equals("00")) {
+				sb.append('a');
+			} else if (substr.equals("01")) {
+				sb.append('c');
+			} else if (substr.equals("10")) {
+				sb.append('g');
+			} else if (substr.equals("11")) {
+				sb.append('t');
+			}
+		}
+		sb.append(": " + freq);
+		return sb.toString();
 	}
 
 }
