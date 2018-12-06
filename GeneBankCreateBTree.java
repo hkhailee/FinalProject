@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -40,10 +39,14 @@ public class GeneBankCreateBTree {
 
 				if (Integer.parseInt(args[0]) == 0 || Integer.parseInt(args[0]) == 1) {
 					if (Integer.parseInt(args[0]) == 1) {
-
+						
+						if(Integer.parseInt(args[4]) <=1 ) {
+							printUsage();
+						}
+						else {
 						cacheSize = Integer.parseInt(args[4]); // cache size should never change
 						thisCache = new Cache<TreeObject>(cacheSize); // uses optional value of cache size
-
+						}
 					}
 				} else {
 					System.out.println(Integer.parseInt(args[0]));
@@ -122,7 +125,8 @@ public class GeneBankCreateBTree {
 					String str = lineToken.replaceAll("\\s", "");
 					
 					if (str.equals("ORIGIN")) {
-//						System.out.println(1);
+//						System.out.println(1);With the Cache option, the cache size
+					
 						foundStart = true;
 						System.out.println("foundStart: " + foundStart);
 
@@ -202,8 +206,26 @@ public class GeneBankCreateBTree {
 				/*
 				 * debugging level
 				 */
+				
+				if(args.length==5  && Integer.parseInt(args[4])<=1) {
+					if (Integer.parseInt(args[5]) == 0) {
+						// Any diagnostic messages, help and status messages must be be printed on
+						// standard error stream
+					} else if (Integer.parseInt(args[5]) == 1) {
+						// The program writes a text file named dump, that has the following line
+						// format:
+						// DNA string: frequency. The dump file contains DNA string (corresponding to
+						// the key stored) and frequency in an inorder traversal. You can find a dump
+						// file
+						//System.out.println(thisCache.toString());
 
-				if (args.length == 6) {
+					} else {
+						printUsage(); // invalid debug value given
+					}
+				}
+				
+
+				else if (args.length == 6) {
 					if (Integer.parseInt(args[5]) == 0) {
 						// Any diagnostic messages, help and status messages must be be printed on
 						// standard error stream
