@@ -226,22 +226,22 @@ public class BTree {
 		}
 	}
 
-	public void traverseTree(String test, int k) throws Exception {
+	public void traverseTree(String test, int k, int subLength) throws Exception {
 		
 		FileWriter fw = new FileWriter(new File(test+".btree.dump."+k));
-		treeTraverse(root, fw);
+		treeTraverse(root, fw, subLength);
 		fw.close();
 	}
 
-	private void treeTraverse(BTreeNode rootTrav, FileWriter fw) throws Exception {
+	private void treeTraverse(BTreeNode rootTrav, FileWriter fw, int subLength) throws Exception {
 
 		int chld = rootTrav.getNumChldPtrs();
 		int obj = rootTrav.getNumObjects();
 
-		int n = 6;
+		int n = subLength;
 
 		for (int i = 1; i <= chld; i++) {
-			treeTraverse(rootTrav.diskRead(i), fw);
+			treeTraverse(rootTrav.diskRead(i), fw, subLength);
 			if (obj >= i) {
 				String str = backToString(rootTrav.getObject(i).getValue(), rootTrav.getObject(i).getFrequency(), n);
 				fw.write(str + "\n");
