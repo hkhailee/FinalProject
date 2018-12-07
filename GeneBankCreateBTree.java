@@ -1,3 +1,5 @@
+package cs321_final;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,8 +57,10 @@ public class GeneBankCreateBTree {
 			// if degree is 0 then find optimal degree and use that
 			if (Integer.parseInt(args[1]) == 0) {
 
-				// ((2t-1)application object size) + ((2t+1)pointer object size) + (BtreeNode
-				// metadata size) <= 4096
+				//4096 >= (2t-1)12+(2t+1)4+12
+				degree= 127;
+				
+				
 
 			} else {
 				degree = Integer.parseInt(args[1]); // takes in degree t
@@ -119,7 +123,7 @@ public class GeneBankCreateBTree {
 					System.out.println("foundStart: " + foundStart);
 
 				} else if (foundStart == true) {
-					// lineCount++;
+				
 					for (int i = 0; i < str.length(); i++) {
 						char token = str.charAt(i);
 
@@ -131,7 +135,7 @@ public class GeneBankCreateBTree {
 								|| token == 'T' || token == 'C' || token == 'G') {
 
 							sb.append(Character.toLowerCase(token));
-							// count++;
+							
 
 						}
 						if (sb.length() > subSize) {
