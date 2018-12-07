@@ -65,7 +65,7 @@ public class GeneBankCreateBTree {
 			} else {
 				degree = Integer.parseInt(args[1]); // takes in degree t
 			}
-			file = new File("xyz.gbk.btree.data" + degree + "." + subSize); // takes in file name
+			file = new File(args[2]+".btree.data" + degree + "." + subSize); // takes in file name
 
 			/*
 			 * creating btree
@@ -208,7 +208,7 @@ public class GeneBankCreateBTree {
 					if (cacheInitialized) {
 						System.out.println(thisCache.toString());
 					} else {
-						tree.traverseTree(args[2], subSize, subSize);
+						tree.traverseTree(args[2], degree, subSize);
 					}
 
 				} else {
