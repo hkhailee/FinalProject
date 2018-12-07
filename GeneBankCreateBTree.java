@@ -17,11 +17,9 @@ public class GeneBankCreateBTree {
 	static File file;
 	static File dump;
 	/**
-	 * @param args
-	 */
-	/**
-	 * @param args
-	 */
+	 * The main method for constructing the BTree using the gene data 
+	 * @param args  java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]
+	 */ 
 	public static void main(String args[]) {
 		
 		
@@ -210,8 +208,12 @@ public class GeneBankCreateBTree {
 				System.out.println(
 					"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
 		}
-	}
-
+	}//End of main method
+	/**
+	 * Converts a binary string to a long value 
+	 * @param subString the string to be converted 
+	 * @return the long value 
+	 */
 	private static long toLong(String subString) {
 		
 		String bineString = "";
