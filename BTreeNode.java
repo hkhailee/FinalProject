@@ -39,7 +39,6 @@ public class BTreeNode {
 		children.add(null);
 		this.numObjects = 0;
 	}//End of BTreeNode constructor 
-	
 	/**
 	 * Sets a new parent of this node 
 	 * @param p the pointer to the parent node 
@@ -47,7 +46,6 @@ public class BTreeNode {
 	public void setParentPointer(int p) {
 		this.parentPtr = p;
 	}
-	
 	/**
 	 * Sets a new child pointer for this node 
 	 * @param list an array list of child pointers 
@@ -55,7 +53,6 @@ public class BTreeNode {
 	public void setChildPointers(List<Integer> list) {
 		this.childPtrs = list;
 	}
-	
 	/**
 	 * Sets a new object on the node 
 	 * @param list an array list of tree objects for the node 
@@ -63,7 +60,6 @@ public class BTreeNode {
 	public void setObjects(List<TreeObject> list) {
 		this.objects = list;
 	}
-	
 	/**
 	 * Sets a new parent node for this node 
 	 * @param n the new parent node 
@@ -71,7 +67,6 @@ public class BTreeNode {
 	public void setParent(BTreeNode n) {
 		this.parent = n;
 	}
-	
 	/**
 	 * A getter method for the parent pointer of this node 
 	 * @return the parent pointer for this node
@@ -79,7 +74,6 @@ public class BTreeNode {
 	public int getParentPointer() {
 		return parentPtr;
 	}
-	
 	/**
 	 * Sets the number of objects for this node to x
 	 * @param x the number of objects
@@ -87,7 +81,6 @@ public class BTreeNode {
 	public void setNumObjects(int x) {
 		this.numObjects = x;
 	}
-	
 	/**
 	 * A getter method for the number of objects in this node 
 	 * @return the number of objects
@@ -95,7 +88,6 @@ public class BTreeNode {
 	public int getNumObjects() {
 		return this.numObjects;
 	}
-	
 	/**
 	 * A getter method for the number of child pointers in this node 
 	 * @return the number of child pointers in the node 
@@ -103,7 +95,6 @@ public class BTreeNode {
 	public int getNumChldPtrs() {
 		return childPtrs.size() - 1;
 	}
-	
 	/**
 	 * Sets the object at the given index to the given object 
 	 * @param index the index to be changed 
@@ -117,7 +108,6 @@ public class BTreeNode {
 			objects.add(object);
 		}
 	}
-	
 	/**
 	 * Adds a new object to the objects array list
 	 * @param index  
@@ -126,7 +116,6 @@ public class BTreeNode {
 	public void addObject(int index, TreeObject object) {
 		objects.add(index, object);
 	}
-	
 	/**
 	 * A getter method for the object at the given index 
 	 * @param index
@@ -136,7 +125,6 @@ public class BTreeNode {
 		TreeObject object = objects.get(index);
 		return object;
 	}
-	
 	/**
 	 * When the parameter is 1 the boolean for leaf will become true otherwise it will be false 
 	 * @param x the int value to change the node to a leaf 
@@ -179,7 +167,6 @@ public class BTreeNode {
 	public int getChild(int index) {
 		return this.childPtrs.get(index);
 	}
-	
 	/**
 	 * Removes the child pointer at the given index  
 	 * @param index
@@ -187,7 +174,6 @@ public class BTreeNode {
 	public void removeChild(int index) {
 		childPtrs.remove(index);
 	}
-	
 	/**
 	 * Removes the object at the given index 
 	 * @param index
@@ -195,7 +181,6 @@ public class BTreeNode {
 	public void removeObject(int index) {
 		objects.remove(index);
 	}
-	
 	/**
 	 * A method to write the data of a node so that it may be stored on disk 
 	 * @throws Exception
