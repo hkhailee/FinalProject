@@ -1,5 +1,3 @@
-
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,7 +27,9 @@ public class GeneBankCreateBTree {
 
 			// Checks to see if the correct amount of parameters were presented
 			if (args.length < 4) {
-				printUsage();
+				error = true;
+				// printUsage();
+				throw new Exception();
 			}
 
 			/*
@@ -40,7 +40,8 @@ public class GeneBankCreateBTree {
 				if (Integer.parseInt(args[0]) == 1) {
 					if (Integer.parseInt(args[4]) <= 1) {
 						error = true;
-						printUsage();
+						// printUsage();
+						throw new Exception();
 					} else {
 						cacheInitialized = true;
 						cacheSize = Integer.parseInt(args[4]); // cache size should never change
@@ -50,17 +51,16 @@ public class GeneBankCreateBTree {
 			} else {
 				System.out.println(Integer.parseInt(args[0]));
 				error = true;
-				printUsage();
+				// printUsage();
+				throw new Exception();
 				// throw new Exception(); // invalid cache value given
 			}
 
 			// if degree is 0 then find optimal degree and use that
 			if (Integer.parseInt(args[1]) == 0) {
 
-				//4096 >= (2t-1)12+(2t+1)4+12
-				degree= 127;
-				
-				
+				// 4096 >= (2t-1)12+(2t+1)4+12
+				degree = 127;
 
 			} else {
 				degree = Integer.parseInt(args[1]); // takes in degree t
@@ -84,7 +84,8 @@ public class GeneBankCreateBTree {
 
 			} else {
 				error = true;
-				printUsage();
+				// printUsage();
+				throw new Exception();
 
 			}
 
@@ -95,14 +96,14 @@ public class GeneBankCreateBTree {
 			 * also will potentially add the value to cache
 			 **************************************************************************************/
 			boolean foundStart = false;
-			File file1 = new File(args[2]);
+			File dump = new File(args[2]);
 
 			TreeObject obj;
-			System.out.println(args[2]);
+			//System.out.println(args[2]);
 
 			StringBuilder sb = new StringBuilder();
 
-			BufferedReader input = new BufferedReader(new FileReader(file1));
+			BufferedReader input = new BufferedReader(new FileReader(dump));
 			String lineToken;
 
 			while ((lineToken = input.readLine()) != null) {
@@ -114,16 +115,16 @@ public class GeneBankCreateBTree {
 				if (str.equals("ORIGIN")) {
 
 					foundStart = true;
-					System.out.println("foundStart: " + foundStart);
+				//	System.out.println("foundStart: " + foundStart);
 
 				} else if (lineToken.equals("//")) {
 					foundStart = false;
 
 					sb = new StringBuilder();
-					System.out.println("foundStart: " + foundStart);
+				//	System.out.println("foundStart: " + foundStart);
 
 				} else if (foundStart == true) {
-				
+
 					for (int i = 0; i < str.length(); i++) {
 						char token = str.charAt(i);
 
@@ -135,7 +136,6 @@ public class GeneBankCreateBTree {
 								|| token == 'T' || token == 'C' || token == 'G') {
 
 							sb.append(Character.toLowerCase(token));
-							
 
 						}
 						if (sb.length() > subSize) {
@@ -186,8 +186,8 @@ public class GeneBankCreateBTree {
 				if (Integer.parseInt(args[4]) == 0) {
 					// Any diagnostic messages, help and status messages must be be printed on
 					// standard error stream
-
-					printUsage();
+					System.err.println("no errors in program");
+					// printUsage();
 
 				} else if (Integer.parseInt(args[4]) == 1) {
 					// The program writes a text file named dump, that has the following line
@@ -202,7 +202,7 @@ public class GeneBankCreateBTree {
 				if (Integer.parseInt(args[5]) == 0) {
 					// Any diagnostic messages, help and status messages must be be printed on
 					// standard error stream
-					printUsage();
+					System.err.println("no errors in program");
 				} else if (Integer.parseInt(args[5]) == 1) {
 					// The program writes a text file named dump, that has the following line
 					if (cacheInitialized) {
@@ -212,7 +212,7 @@ public class GeneBankCreateBTree {
 					}
 
 				} else {
-					printUsage(); // invalid debug value given
+					throw new Exception(); // invalid debug value given
 				}
 
 			}
@@ -220,11 +220,24 @@ public class GeneBankCreateBTree {
 
 		catch (FileNotFoundException x) {
 			fileNot = true;
+			//x.printStackTrace();
+			
+			if ((args.length == 5 && (Integer.parseInt(args[4]) == 0))
+					|| (args.length == 6 && Integer.parseInt(args[5]) == 1))
+			System.err.println("file does not exist");
+			x.printStackTrace();
+			// printUsage();
 		} catch (Exception e) {
-			e.printStackTrace();
-			error = true;
-			System.out.println(
-					"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
+			//e.printStackTrace();
+
+			if ((args.length == 5 && (Integer.parseInt(args[4]) == 0))
+					|| (args.length == 6 && Integer.parseInt(args[5]) == 1)) {
+				e.printStackTrace();
+				System.err.println("Your input does not fit the parameters domain");
+				System.err.println(
+						"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
+
+			}
 		}
 
 	}
@@ -261,19 +274,17 @@ public class GeneBankCreateBTree {
 		return stream;
 	}
 
-	private static void printUsage() {
-
-		if (fileNot == true) {
-			System.err.println("file does not exist");
-		}
-		if (error = true) {
-			System.err.println("Your input does not fit the parameters domain");
-			System.err.println(
-					"java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]");
-		} else {
-			System.err.println("program ran smoothly");
-		}
-
-	}
+	/*
+	 * private static void printUsage() {
+	 * 
+	 * if (fileNot == true) { System.err.println("file does not exist"); } if (error
+	 * = true) {
+	 * System.err.println("Your input does not fit the parameters domain");
+	 * System.err.println(
+	 * "java GeneBankCreateBTree <0/1(no/with Cache)> <degree> <gbk file> <sequence length> [<cache size>] [<debug level>]"
+	 * ); } else { System.err.println("program ran smoothly"); }
+	 * 
+	 * }
+	 */
 
 }
