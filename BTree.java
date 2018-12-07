@@ -148,13 +148,6 @@ public class BTree {
 	 * @throws Exception
 	 */
 	public void insert(TreeObject input) throws Exception {
-
-		if (input.getValue() == 3) {
-			int x = 0;
-		}
-		if (input.getValue() < 22) {
-			int x = 4;
-		}
 		BTreeNode tempRoot = root;
 		if (root.getNumObjects() == maxLoad) { // When root node is full
 			BTreeNode newRoot = new BTreeNode(allocateNode(), maxLoad, raf);
