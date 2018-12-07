@@ -29,5 +29,3 @@ The speed when inserting the long objects into the Binary Tree is fairly slow, t
 
 A minor observation with our particular tree is that we split the node before insertion if the degree with insertion of an additional object is met. This makes for a cleaner and more organized way of creating the tree. The Binary Tree is organized so that the lowest value of the tree is at the bottom left child. 
 
-
-With Cache 100 vs 500:
