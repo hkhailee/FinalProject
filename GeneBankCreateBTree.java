@@ -222,9 +222,10 @@ public class GeneBankCreateBTree {
 			//x.printStackTrace();
 			
 			if ((args.length == 5 && (Integer.parseInt(args[4]) == 0))
-					|| (args.length == 6 && Integer.parseInt(args[5]) == 1))
+					|| (args.length == 6 && Integer.parseInt(args[5]) == 1)){
 			System.err.println("file does not exist");
 			x.printStackTrace();
+			}
 			// printUsage();
 		} catch (Exception e) {
 			//e.printStackTrace();
