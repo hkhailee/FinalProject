@@ -3,9 +3,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Random;
-
+/**
+ * @author Marcus Henke and Dominik Huffield and Hailee Kiesecker
+ *
+ * This class contains a constructor to create a BTree and the supporting 
+ * methods that allow for the insertion and searching of nodes
+ */
 public class BTree {
-
 	private int t;	//this is the degree t of the BTree
 	private int maxLoad;
 	private int size; //the size (in nodes) of the BTree
@@ -31,7 +35,13 @@ public class BTree {
 		x.diskWrite();
 		currentLoad = 0;
 	}
-	
+	/**
+	 * The constructor method for the BTree
+	 * 
+	 * @param t the degree for the size limitations on the nodes
+	 * @param raf the random access file that the data is being written to on disk
+	 * @throws Exception 
+	 */
 	public BTree(RandomAccessFile raf, boolean exists) throws IOException {
 		nodeOnMemory = root;
 		raf.seek(0);
@@ -47,7 +57,12 @@ public class BTree {
 		cursor = 4;
 		allocateNode();
 	}
-	
+	/**
+	 * Allocates disk space for a node 
+	 * 
+	 * @return the byte position of the cursor pointing to the end of the file
+	 * @throws Exception
+	 */
 	private int allocateNode() throws Exception  {
 		int x = cursor;
 	    raf.seek(cursor); // Go to byte at offset position 5.
@@ -68,6 +83,17 @@ public class BTree {
 	    }
 	    return x;
 	}
+	/**
+	 * A boolean method that checks a child node for a duplicate of a tree object 
+	 * if a duplicate is found that tree objects frequency is incremented and the 
+	 * boolean returns false 
+	 * 
+	 * @param node the ancestor node of the child being searched for a duplicate 
+	 * @param index the index position of the child
+	 * @param input the tree object that is being inserted 
+	 * @return false if the is a duplicate else true
+	 * @throws Exception
+	 */
 	private boolean canSplit(BTreeNode node, int index, TreeObject input) throws Exception {
 		BTreeNode tempNode = node.diskRead(index);
 		int obj = tempNode.getNumObjects();
@@ -81,8 +107,15 @@ public class BTree {
 		}
 		return true;
 	}
-	
 	// When a node has a full child at given index this method will split that child node
+	/**
+	 * When the child node of a parent is full and can hold no more object this method 
+	 * will be called thus splitting the node in two
+	 * 
+	 * @param parentNode the ancestor of the node being split 
+	 * @param index the index of the descendant (the full node)
+	 * @throws Exception
+	 */
 	private void splitChild(BTreeNode parentNode, int index) throws Exception {
 		//Creates a new node that will house the data for the right child after the split
 		BTreeNode newRightNode = new BTreeNode(allocateNode(), maxLoad, raf);		
@@ -134,7 +167,12 @@ public class BTree {
 		parentNode.diskWrite();		
 	
 	}
-	
+	/**
+	 * The initial insertion method that will split a root if it is full and will 
+	 * then pass the insertion object to insertnonfull
+	 * @param input the threeobject being inserted 
+	 * @throws Exception
+	 */
 	public void insert(TreeObject input) throws Exception {
 	//	System.out.println(root.getNumObjects() + " " + root.getNumChldPtrs());
 	//	System.out.println(root.byteOffset);
@@ -161,7 +199,13 @@ public class BTree {
 			insertNonfull (root, input);
 		}
 	}
-	
+	/**
+	 * Recursively calls to descend a tree until a position to insert is found. Will call 
+	 * split tree when a full node is found  
+	 * @param ancestor the parent node 
+	 * @param input the object being inserted 
+	 * @throws Exception
+	 */	
 	private void insertNonfull(BTreeNode ancestor, TreeObject input) throws Exception {
 //		boolean done = false;
 //		BTreeNode temp = ancestor;
@@ -217,11 +261,20 @@ public class BTree {
 		raf.seek(4);
 		root.diskWriteAsRoot();
 	}
-	
+	/** 
+	 * The method to be called to search a tree
+	 * @param longVal the long value of the substring 
+	 * @return the frequency of the object being searched for 
+	 */	
 	public int search(long k) {
 		return searchTree(root, k);
 	}
-	
+	/**
+	 * The recursive method that traverses a tree looking for a tree object 
+	 * @param ancestor the presented node to be searched 
+	 * @param longVal the long value of the substring
+	 * @return the frequency of the object being searched for 
+	 */	
 	private int searchTree(BTreeNode x, long k) {
 		try {
 			int i = 1;
@@ -244,13 +297,25 @@ public class BTree {
 			return 0;
 		}
 	}
-	
+	/**
+	 * The caller method of traversing the tree 
+	 * @param file the file name 
+	 * @param longVal the long value of the substring 
+	 * @param subLength the character length of the substring 
+	 * @throws Exception
+	 */	
 	public void traverseTree(String file, int longVal, int subLength) throws Exception {
 		FileWriter fw = new FileWriter(new File(file+".btree.dump."+longVal));
 		treeTraverse(root, fw, subLength);
 		fw.close();
 	}
-	
+	/**
+	 * The recursive method for the tree traversal 
+	 * @param rootNode the root node of the tree to be traversed 
+	 * @param fw the file writer object 
+	 * @param subLength the length of the substring 
+	 * @throws Exception
+	 */	
 	private void treeTraverse(BTreeNode rootTrav, FileWriter fw, int subLength) throws Exception {
 		
 		int chld = rootTrav.getNumChldPtrs();
@@ -275,7 +340,13 @@ public class BTree {
 		
 		
 	}
-	
+	/**
+	 * A method use to convert a long value back to the binary string representation of the substring 
+	 * @param stream the long value being converted 
+	 * @param freq the frequency of the object 
+	 * @param strLen the length of the string
+	 * @return the binary string value 
+	 */	
 	private String backToString(long stream, int freq, int strLen) {
 		String str = Long.toBinaryString(stream);
 		StringBuilder sb = new StringBuilder();
@@ -304,7 +375,5 @@ public class BTree {
 		sb.append(": " + freq);
 		return sb.toString();
 	}
-	
-	
 	
 }
