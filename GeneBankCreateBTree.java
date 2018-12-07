@@ -65,14 +65,10 @@ public class GeneBankCreateBTree {
 			} else {
 				degree = Integer.parseInt(args[1]); // takes in degree t
 			}
-			file = new File(args[2]+".btree.data" + degree + "." + subSize); // takes in file name
 
 			/*
 			 * creating btree
 			 */
-
-			RandomAccessFile raf = new RandomAccessFile(file, "rw");
-			tree = new BTree(degree, raf);
 
 			/*
 			 * checks to see if k is within range
@@ -88,6 +84,9 @@ public class GeneBankCreateBTree {
 				throw new Exception();
 
 			}
+			File file = new File(args[2]+".btree.data" + "." + degree + "." + subSize); 
+			RandomAccessFile raf = new RandomAccessFile(file, "rw");
+			tree = new BTree(degree, raf);
 
 			/**************************************************************************************
 			 * scan a given gbk file and then send the corresponding sequence string to the
