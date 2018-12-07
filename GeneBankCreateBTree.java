@@ -59,18 +59,6 @@ public class GeneBankCreateBTree {
 				} else {
 					degree = Integer.parseInt(args[1]); // takes in degree t
 				}
-				file = new File("dump2"); // takes in file name
-
-//				dump = new File("dump");
-//				FileWriter write = new FileWriter(dump);
-//				subSize = Integer.parseInt(args[3]);
-//				write.write("BTree Data: ");
-				/*
-				 * creating btree
-				 */
-				
-				RandomAccessFile raf = new RandomAccessFile(file, "rw");
-				tree = new BTree(degree, raf);
 				
 				
 				if (Integer.parseInt(args[0]) == 1) {
@@ -91,6 +79,11 @@ public class GeneBankCreateBTree {
 					printUsage();
 
 				}
+				
+				file = new File(args[2]+".btree.data."+subSize+"."+degree); // takes in file name
+				
+				RandomAccessFile raf = new RandomAccessFile(file, "rw");
+				tree = new BTree(degree, raf);
 
 				/*
 				 * scan a given kgb file and then send the corresponding sequence string to the
@@ -208,9 +201,8 @@ public class GeneBankCreateBTree {
 						printUsage(); // invalid debug value given
 					}
 				}
-				System.out.println(tree.search(0));
 				tree.finish();
-				tree.traverseTree("test", degree, subSize);
+				tree.traverseTree(args[2], degree, subSize);
 
 			} catch (Exception e) {
 				e.printStackTrace();
